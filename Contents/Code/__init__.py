@@ -76,7 +76,7 @@ def HandleRequest(pathNouns, count):
         menuItems.extend(BuildGenericMenu(RECOMMENDED_URL,"Rekommenderat","pb"))    
         
     if key == "index":
-        for i in range(1,10):
+        for i in range(1,13):
             menuItems.extend(BuildGenericMenu(INDEX_URL % (i),title,"am"))
     
     if key == "live":
