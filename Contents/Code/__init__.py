@@ -18,14 +18,18 @@ VERSION="1.2"
 PLEX_PLAYER_URL = "http://www.plexapp.com/player/player.php?&url="
 PLUGIN_PREFIX	= "/video/svt"
 SITE_URL		= "http://svtplay.se"
-LATEST_SHOWS_URL = "http://svtplay.se/?/pb,a1364143,1,f,-1"
-MOST_VIEWED_URL = "http://svtplay.se/?/pb,a1364144,1,f,-1"
-RECOMMENDED_URL = "http://svtplay.se/?/pb,a1364142,1,f,-1"
-LATEST_VIDEOS_URL = "http://svtplay.se/?/cb,a1364145,1,f,-1"
+LATEST_SHOWS_URL = "http://svtplay.se/?/pb,a1364143,%d,f,-1"
+MOST_VIEWED_URL = "http://svtplay.se/?/pb,a1364144,%d,f,-1"
+RECOMMENDED_URL = "http://svtplay.se/?/pb,a1364142,%d,f,-1"
+LATEST_VIDEOS_URL = "http://svtplay.se/?/cb,a1364145,%d,f,-1"
+LATEST_NEWS_SHOWS = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1527537,%d,f,-1"
 LIVE_URL = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
 CATEGORIES_URL = SITE_URL + "/kategorier"
 INDEX_URL		= SITE_URL + "/alfabetisk?am,,%d,thumbs"
 NO_INFO = "Beskrivning saknas."
+
+#The page step function will only step this many pages deep. Can be changed / function call.
+MAX_PAGINATE_PAGES = 100
 
 CACHE_TIME_LONG    = 60*60*24*30 # Thirty days
 CACHE_TIME_SHORT   = 60*60*5    # 5 minutes
@@ -42,10 +46,10 @@ def Start():
 # Handler function called on each request
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def HandleRequest(pathNouns, count):
-  
     # Cache bug workaround
     Plugin.Dict["Now"] = datetime.datetime.now()
-    
+
+    Plugin.Dict["SHOW_LOOP"] = 0
     # Initialize 
     # - - - - - - - - - - - - - - -
     menuItems = []
@@ -64,21 +68,23 @@ def HandleRequest(pathNouns, count):
         viewGroup = "List"    
            
     if key =="latest_shows":
-        menuItems.extend(BuildGenericMenu(LATEST_SHOWS_URL,"Senaste program","pb"))
+        menuItems.extend(Paginate(LATEST_SHOWS_URL % 1, LATEST_SHOWS_URL, "pb", 10))
    
     if key == "most_viewed":
-        menuItems.extend(BuildGenericMenu(MOST_VIEWED_URL,"Mest sedda","pb"))
+        menuItems.extend(Paginate(MOST_VIEWED_URL % 1, MOST_VIEWED_URL, "pb"))
     
     if key == "latest_videos":
-        menuItems.extend(BuildGenericMenu(LATEST_VIDEOS_URL,"Senaste klipp","cb"))
+        menuItems.extend(Paginate(LATEST_VIDEOS_URL % 1, LATEST_VIDEOS_URL, "cb", 2))
     
     if key == "recommended":
-        menuItems.extend(BuildGenericMenu(RECOMMENDED_URL,"Rekommenderat","pb"))    
+        menuItems.extend(Paginate(RECOMMENDED_URL % 1, RECOMMENDED_URL, "pb"))
         
+    if key == "latest_news":
+        menuItems.extend(Paginate(LATEST_NEWS_SHOWS % 1, LATEST_NEWS_SHOWS, "pb", 3))
+
     if key == "index":
-        for i in range(1,10):
-            menuItems.extend(BuildGenericMenu(INDEX_URL % (i),title,"am"))
-    
+        menuItems.extend(Paginate(INDEX_URL % 1, INDEX_URL, "am"))
+
     if key == "live":
         menuItems.extend(BuildLiveMenu())   
     
@@ -96,10 +102,10 @@ def HandleRequest(pathNouns, count):
             divIds = ["sb","se"] # Separate divs for "nyheter" and "lokalnyheter"
         
         for divId in divIds:
-           menuItems.extend(BuildGenericMenu(url,title,divId,paginate=True))
+           menuItems.extend(BuildGenericMenu(url,divId,paginate=True))
            
     if key == "program":
-        menuItems.extend(BuildGenericMenu(url,title,"sb"))
+        menuItems.extend(BuildGenericMenu(url,"sb"))
         
     # Create and return mediacontainer    
     menu = MediaContainer('art-default.jpg', title1="SVT Play " + VERSION, title2=unicode(title,'utf-8'), viewGroup=viewGroup)
@@ -118,9 +124,10 @@ def HandleRequest(pathNouns, count):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def BuildMainMenu():
     menuItems = []
-    menuItems.append(DirectoryItem(BuildArgs("most_viewed", "","Mest sedsssda"), "Mest sedda", Plugin.ExposedResourcePath('main_mest_sedda.png')))
+    menuItems.append(DirectoryItem(BuildArgs("most_viewed", "","Mest sedda"), "Mest sedda", Plugin.ExposedResourcePath('main_mest_sedda.png')))
     menuItems.append(DirectoryItem(BuildArgs("categories", "", u'Kategorier'), u'Välj kategori', Plugin.ExposedResourcePath('main_kategori.png')))
     menuItems.append(DirectoryItem(BuildArgs("recommended", "", 'Rekommenderat'), 'Rekommenderat', Plugin.ExposedResourcePath('main_rekommenderat.png')))
+    menuItems.append(DirectoryItem(BuildArgs("latest_news", "","Senaste nyhetsprogram"), "Senaste nyhetsprogram", Plugin.ExposedResourcePath('category_nyheter.png')))
     menuItems.append(DirectoryItem(BuildArgs("latest_shows", "", 'Senaste program'), "Senaste program", Plugin.ExposedResourcePath('main_senaste_program.png')))
     menuItems.append(DirectoryItem(BuildArgs("latest_videos", "", 'Senaste klipp' ), "Senaste klipp", Plugin.ExposedResourcePath('main_senaste_klipp.png')))
     menuItems.append(DirectoryItem(BuildArgs("index", "",u'Program A-Ö'), u'Program A-Ö', Plugin.ExposedResourcePath('main_index.png')))
@@ -156,15 +163,58 @@ def BuildLiveMenu():
         menuItems.append(WebVideoItem(liveContentUrl, liveName,liveDesc, "0",liveIcon))
         
     return menuItems
-            
+
+def Paginate(startUrl, requestUrl, divId, maxPages = MAX_PAGINATE_PAGES):
+    Log.Add("Pagination in progress...")
+    menuItems = []
+    pageElement = XML.ElementFromURL(startUrl, True)
+    xpathBase = "//div[@id='%s']" % (divId)
+    paginationLinks = pageElement.xpath(xpathBase + "//div[@class='pagination']//li[@class='']/a")
+    start = 2
+    linkPages = len(paginationLinks)
+    if(linkPages > 0): 
+        stop = int(paginationLinks[linkPages-1].text)
+        stop = min(stop, maxPages)
+    else:
+        stop = 1
+
+    Log.Add("Start: %s, Stop: %s" % (start, stop))
+    menuItems = BuildGenericMenu(startUrl, divId)
+    for i in range(start, stop + 1):
+        nextUrl = requestUrl % i
+        Log.Add(nextUrl)
+        menuItems = menuItems + BuildGenericMenu(nextUrl, divId)
+    return menuItems
+
+
 # Main method for sucking out svtplay content
-def BuildGenericMenu(url, title, divId, paginate=False):
+def BuildGenericMenu(url, divId, paginate=False):
     menuItems = []
     pageElement = XML.ElementFromURL(url, True)
     Log.Add("url: %s divId: %s" % (url, divId))
     xpathBase = "//div[@id='%s']" % (divId)
     Log.Add("xpath expr: " + xpathBase)
-    
+
+    #This section determines if we are on a page for a program (show)
+    #If so it will extract all the shows episodes via paginating and then return the list
+    playerTest = pageElement.xpath("//div[@id='player']")
+    #Since we are recursing this function via the paginate function we must make sure not to get stuck endlessly
+    showLoop = Plugin.Dict["SHOW_LOOP"]
+    if(len(playerTest) > 0 and showLoop == 0):
+        Plugin.Dict["SHOW_LOOP"] = 1
+        showUrl = pageElement.xpath("//div[@id='player']//div[@class='layer']//div[@class='info']//a[starts-with(@href,'/t/')]")[0].get("href")
+        paginateUrl = pageElement.xpath(xpathBase + "//div[@class='pagination']//li[@class='hidden']//a[starts-with(@href,'?')]")[0].get("href")
+        #Replace the index number in the url to a %d so that we can easily loop over all the pages
+        p2 = string.split(paginateUrl, ',')
+        p2[len(p2) - 3] = "%d"
+        paginateUrl =  string.join(p2, ',')
+        #Compose the full URL
+        completeUrl = SITE_URL + showUrl + paginateUrl
+        Log.Add("CompleteURL: %s" % completeUrl)
+        menuItems = Paginate(completeUrl % 1, completeUrl, divId)
+        Plugin.Dict["SHOW_LOOP"] = 0 
+        return menuItems
+
     clipLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/v/')]")
     for clipLink in clipLinks:
         clipName = clipLink.xpath("span/text()")[0].strip()
@@ -210,7 +260,7 @@ def BuildGenericMenu(url, title, divId, paginate=False):
         for paginationLink in paginationLinks[:3]:
             pageUrl = url + "?" + paginationLink.get("href")
             Log.Add("Paginating using url: %s" % (pageUrl))
-            menuItems.extend(BuildGenericMenu(pageUrl, title, divId, paginate=False))
+            menuItems.extend(BuildGenericMenu(pageUrl, divId, paginate=False))
         
     return menuItems
     
