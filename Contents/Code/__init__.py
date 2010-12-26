@@ -45,7 +45,7 @@ CACHE_TIME_SHORT   = 60*10    # 5 minutes
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 def Start():
     Plugin.AddPrefixHandler(PLUGIN_PREFIX, MainMenu, "SVT Play", "icon-default.png", "art-default.jpg")
-    #HTTP.SetCacheTime(CACHE_TIME_SHORT)
+    HTTP.CacheTime = CACHE_TIME_SHORT
     #HTTP.PreCache(INDEX_URL % 1)
     #HTTP.PreCache(LATEST_SHOWS_URL % 1)
     #HTTP.PreCache(MOST_VIEWED_URL % 1)
@@ -83,12 +83,6 @@ def HandleRequest(pathNouns, count):
    
     if key == "most_viewed":
         menuItems.extend(Paginate(MOST_VIEWED_URL % 1, MOST_VIEWED_URL, "pb"))
-    
-    if key == "latest_videos":
-        menuItems.extend(Paginate(LATEST_VIDEOS_URL % 1, LATEST_VIDEOS_URL, "cb", 2))
-    
-    if key == "recommended":
-        menuItems.extend(Paginate(RECOMMENDED_URL % 1, RECOMMENDED_URL, "pb"))
 
     if key == "live":
         menuItems.extend(BuildLiveMenu())   
@@ -129,15 +123,14 @@ def HandleRequest(pathNouns, count):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def MainMenu():
     menu = MediaContainer(viewGroup="List")
+    menu.Append(Function(DirectoryItem(ListRecommended, title=RECOMMENDED, thumb=R('main_rekommenderat.png'))))
+    menu.Append(Function(DirectoryItem(ListMostViewed, title=MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
     menu.Append(Function(DirectoryItem(ListLatestShows, title=LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
     menu.Append(Function(DirectoryItem(ListLatestNewsShows, title=LATEST_NEWS_SHOWS, thumb=R('category_nyheter.png'))))
-    menu.Append(Function(DirectoryItem(ListLatestVideos, title=LATEST_VIDEOS, thumb=R('main_senaste_klipp.png'))))
+    #menu.Append(Function(DirectoryItem(ListLatestVideos, title=LATEST_VIDEOS, thumb=R('main_senaste_klipp.png'))))
     menu.Append(Function(DirectoryItem(ListAllShows, title=INDEX_SHOWS, thumb=R('main_index.png'))))
     menu.Append(PrefsItem(u"Inställningar"))
-    #menuItems.append(DirectoryItem(BuildArgs("most_viewed", "","Mest sedda"), "Mest sedda", Plugin.ExposedResourcePath('main_mest_sedda.png')))
     #menuItems.append(DirectoryItem(BuildArgs("categories", "", u'Kategorier'), u'Välj kategori', Plugin.ExposedResourcePath('main_kategori.png')))
-    #menuItems.append(DirectoryItem(BuildArgs("recommended", "", 'Rekommenderat'), 'Rekommenderat', Plugin.ExposedResourcePath('main_rekommenderat.png')))
-    #menuItems.append(DirectoryItem(BuildArgs("latest_videos", "", 'Senaste klipp' ), "Senaste klipp", Plugin.ExposedResourcePath('main_senaste_klipp.png')))
     #menuItems.append(DirectoryItem(BuildArgs("live", "",u'Livesändningar'), u'Livesändningar', Plugin.ExposedResourcePath('main_live.png')))
     return menu
 
@@ -183,6 +176,22 @@ def ListLatestVideos(sender):
     showsList.Extend(Paginate(LATEST_VIDEOS_URL % 1, LATEST_VIDEOS_URL, "cb", BuildGenericMenu, 3))
     Log("Clips %d" % len(showsList))
     return showsList
+
+def ListRecommended(sender):
+    Log("ListRecommended")
+    showsList = MediaContainer()
+    #Paginate only a few pages
+    showsList.Extend(Paginate(RECOMMENDED_URL % 1, RECOMMENDED_URL, "pb", BuildGenericMenu))
+    return showsList
+
+def ListMostViewed(sender):
+    Log("ListMostViewed")
+    showsList = MediaContainer()
+    #Paginate only a few pages...
+    showsList.Extend(Paginate(MOST_VIEWED_URL % 1, MOST_VIEWED_URL, "pb", BuildGenericMenu))
+    return showsList
+
+
 
 def BuildCategoriesMenu():
     menuItems = []
