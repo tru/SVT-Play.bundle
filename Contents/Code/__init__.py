@@ -55,12 +55,6 @@ def Start():
     #HTTP.PreCache(CATEGORIES_URL)
     MediaContainer.art = R(ART)
 
-def CreateDict():
-    Log("CreateDict")
-
-def CreatePrefs():
-    Log("CreatePrefs")
-
 # Handler function called on each request
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def HandleRequest(pathNouns, count):
