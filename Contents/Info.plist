@@ -23,6 +23,6 @@
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
     <key>PlexFrameworkVersion</key>
-    <string>1</string>
+    <string>2</string>
 </dict>
 </plist>

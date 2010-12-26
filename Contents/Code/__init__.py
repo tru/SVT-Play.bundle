@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*
-from PMS import *
-from PMS.Objects import *
+#from PMS import *
+#from PMS.Objects import *
 
 import re
 
@@ -346,10 +346,6 @@ def PlayFLV(sender, url):
 
 # Helpers
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    
-# Builds a "pathNoun" structure
-def BuildArgs(key, url='', title=''):
-    return "%s||%s||%s" % (key, _E(url), title)
     
 def GetProgramInfo(programUrl):
     programHtml = HTTP.Request(programUrl)
