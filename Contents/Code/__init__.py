@@ -3,6 +3,7 @@
 #from PMS.Objects import *
 
 import re
+import string
 
 # Global constants
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -150,7 +151,7 @@ def IndexShows(url, divId):
     Log("Index Shows...")
     # Note: must have "span" element, otherwise some wierd stuff can come along...
     xpathBase = "//div[@id='%s']" % (divId)
-    pageElement = XML.ElementFromURL(url, True)
+    pageElement = HTML.ElementFromURL(url)
     programLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href, '/t/')]/span/..")
     programUrls = [] 
     for programLink in programLinks:
@@ -185,7 +186,7 @@ def ListLatestVideos(sender):
 
 def BuildCategoriesMenu():
     menuItems = []
-    for element in XML.ElementFromURL(CATEGORIES_URL, True).xpath("//li/div[@class='container']/a"):
+    for element in HTML.ElementFromURL(CATEGORIES_URL).xpath("//li/div[@class='container']/a"):
         categoryName = element.xpath("span[@class='category-header']/text()")[0]
         categoryUrl = SITE_URL + element.get("href")
         categoryIconName = "category_" + re.search(r'(\w+)$',categoryUrl).group(1) + ".png"
@@ -196,7 +197,7 @@ def BuildCategoriesMenu():
     
 def BuildLiveMenu():
     menuItems = []
-    liveElements = XML.ElementFromURL(LIVE_URL, True)
+    liveElements = HTML.ElementFromURL(LIVE_URL)
     for element in liveElements.xpath("//a[@class='tableau']"):
         liveName = strip_all(unicode(element.xpath("../../../h3/text()")[0]))        
         liveUrl = SITE_URL +  element.get("href")
@@ -216,7 +217,7 @@ def BuildLiveMenu():
 def Paginate(startUrl, requestUrl, divId, callFunc, maxPages = MAX_PAGINATE_PAGES):
     Log("Pagination in progress...")
     menuItems = []
-    pageElement = XML.ElementFromURL(startUrl, True)
+    pageElement = HTML.ElementFromURL(startUrl)
     xpathBase = "//div[@id='%s']" % (divId)
     paginationLinks = pageElement.xpath(xpathBase + "//div[@class='pagination']//li[@class='']/a")
     start = 1
@@ -246,7 +247,7 @@ def BuildShowEpisodesMenu(showUrl, divId):
     #If so it will extract all the shows episodes via paginating and then return the list
     Log("BuildShowEpisodesMenu")
     menuItems = []
-    pageElement = XML.ElementFromURL(showUrl, True)
+    pageElement = HTML.ElementFromURL(showUrl)
     xpathBase = "//div[@id='%s']" % (divId)
     playerTest = pageElement.xpath("//div[@id='player']")
     Log(playerTest)
@@ -268,7 +269,7 @@ def BuildShowEpisodesMenu(showUrl, divId):
 # Main method for sucking out svtplay content
 def BuildGenericMenu(url, divId, paginate=False):
     menuItems = []
-    pageElement = XML.ElementFromURL(url, True)
+    pageElement = HTML.ElementFromURL(url)
     Log("url: %s divId: %s" % (url, divId))
     xpathBase = "//div[@id='%s']" % (divId)
     Log("xpath expr: " + xpathBase)
@@ -349,14 +350,14 @@ def PlayFLV(sender, url):
     
 def GetProgramInfo(programUrl):
     programHtml = HTTP.Request(programUrl)
-    infoElements = XML.ElementFromString(programHtml, True).xpath("//div[@id='description-title']")
+    infoElements = HTML.ElementFromString(programHtml).xpath("//div[@id='description-title']")
     if (len(infoElements) > 0):
         return infoElements[0].text.strip()
     return NO_INFO
      
 def GetEpisodeInfo(episodeUrl):
     episodeHtml = HTTP.Request(episodeUrl)
-    episodeElements = XML.ElementFromString(episodeHtml, True)
+    episodeElements = HTML.ElementFromString(episodeHtml)
     infoElements = episodeElements.xpath("//div[@id='description-episode']")
     episodeInfo = NO_INFO
     if (len(infoElements) > 0):
