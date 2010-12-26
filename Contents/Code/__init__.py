@@ -56,57 +56,6 @@ def Start():
     HTTP.PreCache(CATEGORIES_URL)
     MediaContainer.art = R(ART)
 
-# Handler function called on each request
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-def HandleRequest(pathNouns, count):
-
-    # Initialize 
-    # - - - - - - - - - - - - - - -
-    menuItems = []
-    viewGroup = "InfoList"
-    Log.Add("\n\n\n- - - - - - - - - - - - - - - \nRequest %s %s" % (count,pathNouns))
-    
-    # Static menus (Hard-coded url)
-    # - - - - - - - - - - - - - -
-    if key == "categories":
-        menuItems.extend(BuildCategoriesMenu())
-        viewGroup = "List"    
-
-    if key == "live":
-        menuItems.extend(BuildLiveMenu())   
-    
-    # Dynamic menus (parametrized url)
-    # - - - - - - - - - - - - - - - - -
-    if key == "category":
-        
-        # Generally the contents are in the "pb" (program browser) div
-        divIds = ["pb"]
-        
-        # Some special cases tho...
-        if url.endswith("oppet_arkiv") or url.endswith("sport"):
-            divIds = ["sb"]
-        if url.endswith("nyheter"):
-            divIds = ["sb","se"] # Separate divs for "nyheter" and "lokalnyheter"
-        
-        for divId in divIds:
-           menuItems.extend(BuildGenericMenu(url,divId,paginate=True))
-           
-    if key == "program":
-        menuItems.extend(BuildGenericMenu(url,"sb"))
-        
-    # Create and return mediacontainer    
-    menu = MediaContainer('art-default.jpg', title1="SVT Play " + VERSION, title2=unicode(title,'utf-8'), viewGroup=viewGroup)
-    for menuItem in menuItems:
-        menu.AppendItem(menuItem)
-    if (len(menuItems) == 0):
-        menu.SetMessage(u'Innehåll saknas',u'Det finns inget innehåll under detta menyval för tillfället.\nPröva igen vid ett senare tillfälle.')
-    
-    Log.Add("%d items added to menu" % (len (menuItems)))
-    return menu.ToXML()
-   
-    
- 
-    
 # Menu builder methods
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def MainMenu():
@@ -117,6 +66,7 @@ def MainMenu():
     menu.Append(Function(DirectoryItem(ListLatestNewsShows, title=LATEST_NEWS_SHOWS, thumb=R('category_nyheter.png'))))
     menu.Append(Function(DirectoryItem(ListCategories, title=CATEGORIES, thumb=R('main_kategori.png'))))
     #menu.Append(Function(DirectoryItem(ListLatestVideos, title=LATEST_VIDEOS, thumb=R('main_senaste_klipp.png'))))
+    menu.Append(Function(DirectoryItem(ListLiveMenu, title=LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(Function(DirectoryItem(ListAllShows, title=INDEX_SHOWS, thumb=R('main_index.png'))))
     menu.Append(PrefsItem(u"Inställningar"))
     #menuItems.append(DirectoryItem(BuildArgs("live", "",u'Livesändningar'), u'Livesändningar', Plugin.ExposedResourcePath('main_live.png')))
@@ -161,8 +111,6 @@ def ListCategory(sender, name, url):
         showsList.Extend(IndexShows(url, "se"))
     elif name == 'Sport':
         showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "sb", IndexShows))
-
-        
 
     return showsList
 
@@ -235,11 +183,12 @@ def ListShowEpisodes(sender, showName, showUrl):
     return epList
 
 
-def BuildLiveMenu():
-    menuItems = []
+def ListLiveMenu(sender):
+    showsList = MediaContainer()
     liveElements = HTML.ElementFromURL(LIVE_URL)
     for element in liveElements.xpath("//a[@class='tableau']"):
-        liveName = strip_all(unicode(element.xpath("../../../h3/text()")[0]))        
+        liveName = strip_all(unicode(element.xpath("../../../../h3/text()")[0]))        
+        Log("LiveName: %s" % liveName)
         liveUrl = SITE_URL +  element.get("href")
        
         # Get the actual stream url from subpage and do some munging for the plex player to get it
@@ -248,11 +197,13 @@ def BuildLiveMenu():
         liveContentUrl = PLEX_PLAYER_URL + liveContentUrl +"&live=true&width=640&height=360"
        
         Log("Live content url: " + liveContentUrl)
-        liveIcon = element.xpath("span/span[starts-with(@class,'flashcontent')]/img")[0].get("src")      
-        liveDesc = strip_all(unicode(element.xpath("span[@class='description']/text()")[0]))
-        menuItems.append(WebVideoItem(liveContentUrl, liveName,liveDesc, "0",liveIcon))
+        liveIcon = element.xpath("//span[@class='flashcontent']/img")[0].get("src")      
+        liveDesc = strip_all(unicode(element.xpath("../../span[@class='description']/text()")[0]))
+        Log("LiveDesc: %s" % liveDesc)
+        #showsList.Append(WebVideoItem(liveContentUrl, liveName,liveDesc, "0",liveIcon))
+        showsList.Append(Function(VideoItem(PlayVideo, liveName,liveDesc, "0",liveIcon),url=liveContentUrl))
         
-    return menuItems
+    return showsList 
 
 def Paginate(startUrl, requestUrl, divId, callFunc, maxPages = MAX_PAGINATE_PAGES):
     Log("Pagination in progress...")
