@@ -32,6 +32,7 @@ RECOMMENDED = u'Rekommenderat'
 MOST_VIEWED = u'Mest sedda'
 LIVE_SHOWS = u'Livesändningar'
 INDEX_SHOWS = u'Program A-Ö'
+CATEGORIES = u'Kategorier'
 
 #The page step function will only step this many pages deep. Can be changed / function call.
 MAX_PAGINATE_PAGES = 100
@@ -52,7 +53,7 @@ def Start():
     #HTTP.PreCache(RECOMMENDED_URL % 1)
     #HTTP.PreCache(LATEST_VIDEOS_URL % 1)
     #HTTP.PreCache(LATEST_NEWS_SHOWS_URL % 1)
-    #HTTP.PreCache(CATEGORIES_URL)
+    HTTP.PreCache(CATEGORIES_URL)
     MediaContainer.art = R(ART)
 
 # Handler function called on each request
@@ -67,16 +68,9 @@ def HandleRequest(pathNouns, count):
     
     # Static menus (Hard-coded url)
     # - - - - - - - - - - - - - -
-    if key == '': # No parameters, show main menu
-        menuItems.extend(BuildMainMenu())
-        viewGroup = "List"
-    
     if key == "categories":
         menuItems.extend(BuildCategoriesMenu())
         viewGroup = "List"    
-   
-    if key == "most_viewed":
-        menuItems.extend(Paginate(MOST_VIEWED_URL % 1, MOST_VIEWED_URL, "pb"))
 
     if key == "live":
         menuItems.extend(BuildLiveMenu())   
@@ -121,12 +115,57 @@ def MainMenu():
     menu.Append(Function(DirectoryItem(ListMostViewed, title=MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
     menu.Append(Function(DirectoryItem(ListLatestShows, title=LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
     menu.Append(Function(DirectoryItem(ListLatestNewsShows, title=LATEST_NEWS_SHOWS, thumb=R('category_nyheter.png'))))
+    menu.Append(Function(DirectoryItem(ListCategories, title=CATEGORIES, thumb=R('main_kategori.png'))))
     #menu.Append(Function(DirectoryItem(ListLatestVideos, title=LATEST_VIDEOS, thumb=R('main_senaste_klipp.png'))))
     menu.Append(Function(DirectoryItem(ListAllShows, title=INDEX_SHOWS, thumb=R('main_index.png'))))
     menu.Append(PrefsItem(u"Inställningar"))
-    #menuItems.append(DirectoryItem(BuildArgs("categories", "", u'Kategorier'), u'Välj kategori', Plugin.ExposedResourcePath('main_kategori.png')))
     #menuItems.append(DirectoryItem(BuildArgs("live", "",u'Livesändningar'), u'Livesändningar', Plugin.ExposedResourcePath('main_live.png')))
     return menu
+
+def ListCategories(sender):
+    Log("ListCategories")
+    pageElement = HTML.ElementFromURL(CATEGORIES_URL).xpath("//li/div[@class='container']/a")
+    categories = []
+    for element in pageElement:
+        categoryName = element.xpath("span[@class='category-header']/text()")[0]
+        categoryUrl = SITE_URL + element.get("href") 
+        categoryIconName = "category_" + re.search(r'(\w+)$',categoryUrl).group(1) + ".png"
+        Log("Name %s, URL %s" % (categoryName, categoryUrl))
+        Log("Icon: %s " % categoryIconName)
+        icon = element.xpath("img")[0]
+        categories.append((categoryName, categoryUrl, categoryIconName))
+
+    catList = MediaContainer()
+    for category in categories:
+        HTTP.PreCache(category[1])
+        catList.Append(Function(DirectoryItem(ListCategory, title=category[0], thumb=R(category[2])), name=category[0], url=category[1]))
+
+    return catList
+
+def ListCategory(sender, name, url):
+    Log("Name: %s Url: %s" % (name,url))
+    showsList = MediaContainer()
+    paginateUrl= FindPaginateUrl(url)
+    paginateUrl = url + '/' + paginateUrl 
+
+    if name == 'Barn':
+        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
+    elif name == 'Film & drama':
+        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
+    elif name == 'Kultur & nöje':
+        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
+    elif name == 'Samhälle & fakta':
+        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
+    elif name == 'Nyheter':
+        showsList.Extend(IndexShows(url, "sb"))
+        showsList.Extend(IndexShows(url, "se"))
+    elif name == 'Sport':
+        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "sb", IndexShows))
+
+        
+
+    return showsList
+
 
 def ListAllShows(sender):
     Log("ListAllShows")
@@ -185,19 +224,17 @@ def ListMostViewed(sender):
     showsList.Extend(Paginate(MOST_VIEWED_URL % 1, MOST_VIEWED_URL, "pb", BuildGenericMenu))
     return showsList
 
+def ListShowEpisodes(sender, showName, showUrl):
+    Log("ListShowEpisodes: %s, %s" %  (showName, showUrl))
+    epList = MediaContainer()
+    episodes = BuildShowEpisodesMenu(showUrl, "sb")
+    for ep in episodes:
+        Log(ep)
+        epList.Append(ep)
+    Log("Added %s items" % len(epList))
+    return epList
 
 
-def BuildCategoriesMenu():
-    menuItems = []
-    for element in HTML.ElementFromURL(CATEGORIES_URL).xpath("//li/div[@class='container']/a"):
-        categoryName = element.xpath("span[@class='category-header']/text()")[0]
-        categoryUrl = SITE_URL + element.get("href")
-        categoryIconName = "category_" + re.search(r'(\w+)$',categoryUrl).group(1) + ".png"
-        Log("Icon name: " + categoryIconName)
-        #categoryIcon = element.xpath("img")[0].get("src")
-        menuItems.append(DirectoryItem(BuildArgs("category",categoryUrl,categoryName), categoryName, Plugin.ExposedResourcePath(categoryIconName)))
-    return menuItems
-    
 def BuildLiveMenu():
     menuItems = []
     liveElements = HTML.ElementFromURL(LIVE_URL)
@@ -223,6 +260,7 @@ def Paginate(startUrl, requestUrl, divId, callFunc, maxPages = MAX_PAGINATE_PAGE
     pageElement = HTML.ElementFromURL(startUrl)
     xpathBase = "//div[@id='%s']" % (divId)
     paginationLinks = pageElement.xpath(xpathBase + "//div[@class='pagination']//li[@class='']/a")
+    Log("Pagination links len: %d" % len(paginationLinks))
     start = 1
     linkPages = len(paginationLinks)
     if(linkPages > 0): 
@@ -241,29 +279,33 @@ def Paginate(startUrl, requestUrl, divId, callFunc, maxPages = MAX_PAGINATE_PAGE
     for i in range(start, stop + 1):
         nextUrl = requestUrl % i
         Log(nextUrl)
-        #menuItems = menuItems + BuildGenericMenu(nextUrl, divId)
         menuItems = menuItems + callFunc(nextUrl, divId)
     return menuItems
 
-def BuildShowEpisodesMenu(showUrl, divId):
+def FindPaginateUrl(url):
+    pageElement = HTML.ElementFromURL(url)
+    #Pick the first a href after the pagination div tag and treat it as the base link
+    paginateUrl = pageElement.xpath("//div[@class='pagination']//a[starts-with(@href,'?')]")[0].get("href")
+    #Replace the index number in the url to a %d so that we can easily loop over all the pages
+    p2 = string.split(paginateUrl, ',')
+    p2[len(p2) - 3] = "%d"
+    paginateUrl =  string.join(p2, ',')
+    return paginateUrl
+
+def BuildShowEpisodesMenu(url, divId):
     #This section determines if we are on a page for a program (show)
     #If so it will extract all the shows episodes via paginating and then return the list
     Log("BuildShowEpisodesMenu")
     menuItems = []
-    pageElement = HTML.ElementFromURL(showUrl)
+    pageElement = HTML.ElementFromURL(url)
     xpathBase = "//div[@id='%s']" % (divId)
     playerTest = pageElement.xpath("//div[@id='player']")
     Log(playerTest)
     if(len(playerTest)):
         Log("Found show page")
         showUrl = pageElement.xpath("//div[@id='player']//div[@class='layer']//div[@class='info']//a[starts-with(@href,'/t/')]")[0].get("href")
-        #Pick the first a href after the pagination div tag and treat it as the base link
-        paginateUrl = pageElement.xpath(xpathBase + "//div[@class='pagination']//a[starts-with(@href,'?')]")[0].get("href")
-        #Replace the index number in the url to a %d so that we can easily loop over all the pages
-        p2 = string.split(paginateUrl, ',')
-        p2[len(p2) - 3] = "%d"
-        paginateUrl =  string.join(p2, ',')
         #Compose the full URL
+        paginateUrl = FindPaginateUrl(url)
         completeUrl = SITE_URL + showUrl + paginateUrl
         Log("CompleteURL: %s" % completeUrl)
         menuItems = Paginate(completeUrl % 1, completeUrl, divId, BuildGenericMenu)
@@ -318,27 +360,8 @@ def BuildGenericMenu(url, divId, paginate=False):
         subCategoryImage = subCategoryLink.xpath("img[@class='folder-thumb']")[0].get("src")
         menuItems.append(DirectoryItem(BuildArgs("program",subCategoryUrl,subCategoryName),subCategoryName,subCategoryImage,NO_INFO))
 
-    # Do pagination if requested 
-    if (paginate):
-        paginationLinks = pageElement.xpath(xpathBase + "//div[@class='pagination']//li[@class='']/a")
-        # Max three pages will do... Getting more pages will be harder as not all page links are shown.
-        for paginationLink in paginationLinks[:3]:
-            pageUrl = url + "?" + paginationLink.get("href")
-            Log("Paginating using url: %s" % (pageUrl))
-            menuItems.extend(BuildGenericMenu(pageUrl, divId, paginate=False))
-        
     return menuItems
     
-def ListShowEpisodes(sender, showName, showUrl):
-    Log("ListShowEpisodes: %s, %s" %  (showName, showUrl))
-    epList = MediaContainer()
-    episodes = BuildShowEpisodesMenu(showUrl, "sb")
-    for ep in episodes:
-        Log(ep)
-        epList.Append(ep)
-    Log("Added %s items" % len(epList))
-    return epList
-
 def PlayVideo(sender, url):
     Log("Request to play video: %s" % url)
     return Redirect(WebVideoItem(url))
