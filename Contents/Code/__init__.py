@@ -260,7 +260,7 @@ def BuildShowEpisodesMenu(url, divId):
         return menuItems
 
 # Main method for sucking out svtplay content
-def BuildGenericMenu(url, divId, paginate=False):
+def BuildGenericMenu(url, divId):
     menuItems = []
     pageElement = HTML.ElementFromURL(url)
     Log("url: %s divId: %s" % (url, divId))
@@ -304,7 +304,8 @@ def BuildGenericMenu(url, divId, paginate=False):
         subCategoryName = subCategoryLink.xpath("span/text()")[0].strip()
         subCategoryUrl = url + subCategoryLink.get("href")
         subCategoryImage = subCategoryLink.xpath("img[@class='folder-thumb']")[0].get("src")
-        menuItems.append(DirectoryItem(BuildArgs("program",subCategoryUrl,subCategoryName),subCategoryName,subCategoryImage,NO_INFO))
+        #menuItems.append(DirectoryItem(BuildArgs("program",subCategoryUrl,subCategoryName),subCategoryName,subCategoryImage,NO_INFO))
+        menuItems.append(Function(DirectoryItem(key=HierarchyDown, title=subCategoryName, thumb=subCategoryImage), url=subCategoryUrl, divId = divId))
 
     return menuItems
     
@@ -313,9 +314,15 @@ def PlayVideo(sender, url):
     return Redirect(WebVideoItem(url))
 
 
-def PlayFLV(sender, url):
-    Log("Request to play FLV: %s" % url)
-    return Redirect(VideoItem(url)) 
+def HierarchyDown(sender, url, divId):
+    Log("schme")
+    menu = MediaContainer()
+    paginateUrl = FindPaginateUrl(url)
+    menu.Extend(Paginate(paginateUrl % 1, paginateUrl, divId, BuildGenericMenu))
+    #menu.Extend(BuildGenericMenu(url, divId))
+
+    return menu
+
 
 # Helpers
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
