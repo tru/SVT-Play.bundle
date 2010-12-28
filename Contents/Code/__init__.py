@@ -183,7 +183,7 @@ def ListShowEpisodes(sender, showName, showUrl):
 def ListLiveMenu(sender):
     showsList = MediaContainer()
     liveElements = HTML.ElementFromURL(LIVE_URL)
-    for element in liveElements.xpath("//a[@class='tableau']"):
+    for element in liveElements.xpath("//span[@class='thumbnail']//a[@class='tableau']"):
         liveName = strip_all(unicode(element.xpath("../../../../h3/text()")[0]))        
         Log("LiveName: %s" % liveName)
         liveUrl = SITE_URL +  element.get("href")
@@ -194,11 +194,11 @@ def ListLiveMenu(sender):
         liveContentUrl = PLEX_PLAYER_URL + liveContentUrl +"&live=true&width=640&height=360"
        
         Log("Live content url: " + liveContentUrl)
-        liveIcon = element.xpath("//span[@class='flashcontent']/img")[0].get("src")      
+        liveIcon= element.xpath("descendant::img[starts-with(@class, 'thumbnail')]")[0].get("src")
         liveDesc = strip_all(unicode(element.xpath("../../span[@class='description']/text()")[0]))
-        
+        Log("Live icon % s" % liveIcon)
         Log("LiveDesc: %s" % liveDesc)
-        showsList.Append(WebVideoItem(url=liveContentUrl, title=liveName, subtitle=liveName, summary=liveDesc, duration="0", art=liveIcon))
+        showsList.Append(WebVideoItem(url=liveContentUrl, title=liveName, summary=liveDesc, duration="0", thumb=liveIcon))
         
     return showsList 
 
