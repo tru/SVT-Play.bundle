@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*
-#from PMS import *
-#from PMS.Objects import *
 
 import re
 import string
@@ -62,14 +60,13 @@ def MainMenu():
     menu = MediaContainer(viewGroup="List")
     menu.Append(Function(DirectoryItem(ListRecommended, title=RECOMMENDED, thumb=R('main_rekommenderat.png'))))
     menu.Append(Function(DirectoryItem(ListMostViewed, title=MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
+    menu.Append(Function(DirectoryItem(ListCategories, title=CATEGORIES, thumb=R('main_kategori.png'))))
     menu.Append(Function(DirectoryItem(ListLatestShows, title=LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
     menu.Append(Function(DirectoryItem(ListLatestNewsShows, title=LATEST_NEWS_SHOWS, thumb=R('category_nyheter.png'))))
-    menu.Append(Function(DirectoryItem(ListCategories, title=CATEGORIES, thumb=R('main_kategori.png'))))
-    #menu.Append(Function(DirectoryItem(ListLatestVideos, title=LATEST_VIDEOS, thumb=R('main_senaste_klipp.png'))))
+    menu.Append(Function(DirectoryItem(ListLatestVideos, title=LATEST_VIDEOS, thumb=R('main_senaste_klipp.png'))))
     menu.Append(Function(DirectoryItem(ListLiveMenu, title=LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(Function(DirectoryItem(ListAllShows, title=INDEX_SHOWS, thumb=R('main_index.png'))))
     menu.Append(PrefsItem(u"Inställningar"))
-    #menuItems.append(DirectoryItem(BuildArgs("live", "",u'Livesändningar'), u'Livesändningar', Plugin.ExposedResourcePath('main_live.png')))
     return menu
 
 def ListCategories(sender):
@@ -199,9 +196,9 @@ def ListLiveMenu(sender):
         Log("Live content url: " + liveContentUrl)
         liveIcon = element.xpath("//span[@class='flashcontent']/img")[0].get("src")      
         liveDesc = strip_all(unicode(element.xpath("../../span[@class='description']/text()")[0]))
+        
         Log("LiveDesc: %s" % liveDesc)
-        #showsList.Append(WebVideoItem(liveContentUrl, liveName,liveDesc, "0",liveIcon))
-        showsList.Append(Function(VideoItem(PlayVideo, liveName,liveDesc, "0",liveIcon),url=liveContentUrl))
+        showsList.Append(WebVideoItem(url=liveContentUrl, title=liveName, subtitle=liveName, summary=liveDesc, duration="0", art=liveIcon))
         
     return showsList 
 
@@ -280,10 +277,8 @@ def BuildGenericMenu(url, divId, paginate=False):
         Log("Clip icon: >" + clipIcon + "<")
         (clipSummary, clipLength, contentUrl) = GetEpisodeInfo(clipUrl) 
         if (contentUrl.endswith('.flv')):
-            Log("Old Content URL %s" % contentUrl)
-            contentUrl = PLEX_CLIP_PLAYER_URL + contentUrl
-            Log("New Content URL %s" % contentUrl)
-            menuItems.append(Function(VideoItem(PlayFLV, clipName, clipSummary, clipLength,clipIcon), url=contentUrl))
+            v = VideoItem(key=contentUrl, title=clipName, summary=clipSummary, duration=clipLength,thumb=clipIcon)
+            menuItems.append(v)
         else:
             # should be rtmp url
             if (contentUrl.endswith('.mp4')):
