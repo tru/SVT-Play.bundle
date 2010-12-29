@@ -107,10 +107,53 @@ def ListCategory(sender, name, url):
         showsList.Extend(IndexShows(url, "sb"))
         showsList.Extend(IndexShows(url, "se"))
     elif name == 'Sport':
-        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "sb", IndexShows))
+        showsList.Append(Function(DirectoryItem(key=ListSportShows, title="Sportprogram", subtitle="Lista alla sportprogram"), paginateUrl=paginateUrl))
+        showsList.Append(Function(DirectoryItem(key=ListSports, title="Se sporter", subtitle="Lista alla sporter"), url=url))
 
     return showsList
 
+def ListSports(sender, url):
+    Log("FindSports: %s" % url)
+    pageElement = HTML.ElementFromURL(url)
+    xpath = "//div[@id='bs']//li//a[starts-with(@href, '/t/')]"
+    sports = pageElement.xpath(xpath)
+    sportsList = MediaContainer()
+    for sport in sports:
+        sportUrl = SITE_URL + sport.get("href")
+        sportName = sport.xpath("text()")[0]
+        Log("Name: %s, URL: %s " % (sportName, sportUrl))
+        sportsList.Append(Function(DirectoryItem(key=ListSport, title=sportName), sportUrl=sportUrl))
+
+    return sportsList
+
+def ListSport(sender, sportUrl):
+    Log(sportUrl)
+    pageElement = HTML.ElementFromURL(sportUrl)
+    sections = pageElement.xpath("//div[@id='sb']//div[@class='navigation player-header']//a[starts-with(@href, '?')]")
+    Log("%d, %s" % (len(sections), sections))
+    sectionsList = MediaContainer()
+    for section in sections:
+        sectionUrl=sportUrl + section.get("href")
+        sectionName=section.xpath("text()")[0]
+        Log("%s, Url: %s" % (sectionName, sectionUrl))
+        sectionsList.Append(Function(DirectoryItem(key=ListSportSection, title=sectionName), url=sectionUrl, sportUrl=sportUrl))
+
+    return sectionsList
+
+def ListSportSection(sender, url, sportUrl):
+    Log(url)
+    paginateUrl = sportUrl + FindPaginateUrl(url)
+    showsList = MediaContainer()
+    showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "sb", IndexShows))
+    return showsList
+
+
+def ListSportShows(sender, paginateUrl):
+    showsList = MediaContainer()
+    Log("ListSportShows")
+    Log(paginateUrl)
+    showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "sb", IndexShows))
+    return showsList
 
 def ListAllShows(sender):
     Log("ListAllShows")
@@ -304,7 +347,6 @@ def BuildGenericMenu(url, divId):
         subCategoryName = subCategoryLink.xpath("span/text()")[0].strip()
         subCategoryUrl = url + subCategoryLink.get("href")
         subCategoryImage = subCategoryLink.xpath("img[@class='folder-thumb']")[0].get("src")
-        #menuItems.append(DirectoryItem(BuildArgs("program",subCategoryUrl,subCategoryName),subCategoryName,subCategoryImage,NO_INFO))
         menuItems.append(Function(DirectoryItem(key=HierarchyDown, title=subCategoryName, thumb=subCategoryImage), url=subCategoryUrl, baseUrl=url, divId = divId))
 
     return menuItems
@@ -320,7 +362,6 @@ def HierarchyDown(sender, url, baseUrl, divId):
     paginateUrl = FindPaginateUrl(url)
     paginateUrl = baseUrl + paginateUrl
     menu.Extend(Paginate(paginateUrl % 1, paginateUrl, divId, BuildGenericMenu))
-    #menu.Extend(BuildGenericMenu(url, divId))
 
     return menu
 
