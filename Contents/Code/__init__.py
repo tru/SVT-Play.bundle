@@ -305,7 +305,7 @@ def BuildGenericMenu(url, divId):
         subCategoryUrl = url + subCategoryLink.get("href")
         subCategoryImage = subCategoryLink.xpath("img[@class='folder-thumb']")[0].get("src")
         #menuItems.append(DirectoryItem(BuildArgs("program",subCategoryUrl,subCategoryName),subCategoryName,subCategoryImage,NO_INFO))
-        menuItems.append(Function(DirectoryItem(key=HierarchyDown, title=subCategoryName, thumb=subCategoryImage), url=subCategoryUrl, divId = divId))
+        menuItems.append(Function(DirectoryItem(key=HierarchyDown, title=subCategoryName, thumb=subCategoryImage), url=subCategoryUrl, baseUrl=url, divId = divId))
 
     return menuItems
     
@@ -314,10 +314,11 @@ def PlayVideo(sender, url):
     return Redirect(WebVideoItem(url))
 
 
-def HierarchyDown(sender, url, divId):
-    Log("schme")
+def HierarchyDown(sender, url, baseUrl, divId):
+    Log("HD: %s" % url)
     menu = MediaContainer()
     paginateUrl = FindPaginateUrl(url)
+    paginateUrl = baseUrl + paginateUrl
     menu.Extend(Paginate(paginateUrl % 1, paginateUrl, divId, BuildGenericMenu))
     #menu.Extend(BuildGenericMenu(url, divId))
 
