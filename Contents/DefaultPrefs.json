@@ -3,7 +3,7 @@
         "id":"quality",
         "type":"enum",
         "label":"Önskad kvalitet",
-        "values":["Högsta", "HD(720p)", "Hög", "Låg"],
+        "values":["Högsta", "HD", "Hög", "Medel", "Låg"],
         "default":"Högsta"
     }
 ]

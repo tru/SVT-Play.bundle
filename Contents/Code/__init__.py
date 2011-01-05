@@ -40,11 +40,27 @@ ART = "art-default.jpg"
 CACHE_TIME_LONG    = 60*60*24*30 # Thirty days
 CACHE_TIME_SHORT   = 60*10    # 5 minutes
 
+#Quality shorts...
+QUAL_HD = 0
+QUAL_HIGH = 1
+QUAL_MED = 2
+QUAL_LOW = 3
+
+#These must match text strings in DefaultPrefs.json
+#"values":["Högsta", "HD", "Hög", "Medel", "Låg"],
+QUAL_T_HIGHEST = u"Högsta"
+QUAL_T_HD = u"HD"
+QUAL_T_HIGH = u"Hög"
+QUAL_T_MED = u"Medel"
+QUAL_T_LOW = u"Låg"
+
+
 # Initializer called by the framework
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 def Start():
     Plugin.AddPrefixHandler(PLUGIN_PREFIX, MainMenu, "SVT Play", "icon-default.png", "art-default.jpg")
     HTTP.CacheTime = CACHE_TIME_SHORT
+    #Locale.SetDefaultLocale(loc="se")
     #HTTP.PreCache(INDEX_URL % 1)
     #HTTP.PreCache(LATEST_SHOWS_URL % 1)
     #HTTP.PreCache(MOST_VIEWED_URL % 1)
@@ -53,6 +69,8 @@ def Start():
     #HTTP.PreCache(LATEST_NEWS_SHOWS_URL % 1)
     HTTP.PreCache(CATEGORIES_URL)
     MediaContainer.art = R(ART)
+    
+    Log("Quality Setting: %s" % Prefs['quality'])
 
 # Menu builder methods
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -411,8 +429,25 @@ def GetEpisodeInfo(episodeUrl):
 def GetContentUrl(pageElement):
     flashvars = pageElement.xpath("//object[@id='playerSwf']/param[@name='flashvars']")[0].get("value")
     # return the pathflv OR the first dynamicStream URL. Never mind choosing what bitrate
+    d = GetUrlQualitySelection(flashvars)
+    Log("Url selection: %s" % d[Prefs['quality']])
     return re.search(r'(pathflv=|dynamicStreams=url:)(.*?)[,&$]',flashvars).group(2)    
 
+def GetUrlQualitySelection(flashvars):
+    links = re.findall("rtmpe.*?,", flashvars)
+    d = dict()
+    d[QUAL_T_HIGHEST] = links[0] 
+    d[QUAL_T_HD] = links[0]
+    if(len(links) > 0):
+        d[QUAL_T_HIGH] = links[1]
+    if(len(links) > 1):
+        d[QUAL_T_MED] = links[2]
+    if(len(links) > 2):
+        d[QUAL_T_LOW] = links[3]
+
+    Log(d)
+    return d
+    
 # Replaces all running whitespace characters with a single space
 def strip_all(str):
     return string.join(string.split(str), ' ')
