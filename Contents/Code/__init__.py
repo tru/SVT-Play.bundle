@@ -428,22 +428,27 @@ def GetEpisodeInfo(episodeUrl):
     
 def GetContentUrl(pageElement):
     flashvars = pageElement.xpath("//object[@id='playerSwf']/param[@name='flashvars']")[0].get("value")
-    # return the pathflv OR the first dynamicStream URL. Never mind choosing what bitrate
-    d = GetUrlQualitySelection(flashvars)
-    Log("Url selection: %s" % d[Prefs['quality']])
+    
+    #If it's an rtmp stream, try to find the different qualities
+    if(flashvars.find("rtmpe") > -1):
+        d = GetUrlQualitySelection(flashvars)
+        url = d[Prefs['quality']]
+        Log("Url selection: %s" % url) 
+        return url 
+
     return re.search(r'(pathflv=|dynamicStreams=url:)(.*?)[,&$]',flashvars).group(2)    
 
 def GetUrlQualitySelection(flashvars):
     links = re.findall("rtmpe.*?,", flashvars)
     d = dict()
-    d[QUAL_T_HIGHEST] = links[0] 
-    d[QUAL_T_HD] = links[0]
+    d[QUAL_T_HIGHEST] = links[0].replace(',','')
+    d[QUAL_T_HD] = links[0].replace(',','')
     if(len(links) > 0):
-        d[QUAL_T_HIGH] = links[1]
+        d[QUAL_T_HIGH] = links[1].replace(',','')
     if(len(links) > 1):
-        d[QUAL_T_MED] = links[2]
+        d[QUAL_T_MED] = links[2].replace(',','')
     if(len(links) > 2):
-        d[QUAL_T_LOW] = links[3]
+        d[QUAL_T_LOW] = links[3].replace(',','')
 
     Log(d)
     return d
