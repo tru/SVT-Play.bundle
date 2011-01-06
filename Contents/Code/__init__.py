@@ -432,7 +432,10 @@ def GetContentUrl(pageElement):
     #If it's an rtmp stream, try to find the different qualities
     if(flashvars.find("rtmpe") > -1):
         d = GetUrlQualitySelection(flashvars)
-        url = d[Prefs['quality']]
+        try: 
+            url = d[Prefs['quality']]
+        except KeyError:
+            url = d[QUAL_T_HIGHEST]
         Log("Url selection: %s" % url) 
         return url 
 
@@ -440,6 +443,9 @@ def GetContentUrl(pageElement):
 
 def GetUrlQualitySelection(flashvars):
     links = re.findall("rtmpe.*?,", flashvars)
+
+    cleanLinks = [link.replace(',','') for link in links]
+    links = cleanLinks
     d = dict()
     d[QUAL_T_HIGHEST] = links[0].replace(',','')
     d[QUAL_T_HD] = links[0].replace(',','')
@@ -450,7 +456,7 @@ def GetUrlQualitySelection(flashvars):
     if(len(links) > 2):
         d[QUAL_T_LOW] = links[3].replace(',','')
 
-    Log(d)
+    #Log(d)
     return d
     
 # Replaces all running whitespace characters with a single space
