@@ -395,6 +395,7 @@ def GetProgramInfo(programUrl):
     return NO_INFO
      
 def GetEpisodeInfo(episodeUrl):
+    Log(episodeUrl)
     episodeHtml = HTTP.Request(episodeUrl)
     episodeElements = HTML.ElementFromString(episodeHtml)
     infoElements = episodeElements.xpath("//div[@id='description-episode']")
@@ -442,19 +443,23 @@ def GetContentUrl(pageElement):
     return re.search(r'(pathflv=|dynamicStreams=url:)(.*?)[,&$]',flashvars).group(2)    
 
 def GetUrlQualitySelection(flashvars):
+    #You could make this more sophisticated by checking that the link you select also
+    #match the correct bitrate and not just assume they are in descending order
+    Log("flashvars: %s" % flashvars)
     links = re.findall("rtmpe.*?,", flashvars)
 
     cleanLinks = [link.replace(',','') for link in links]
     links = cleanLinks
     d = dict()
-    d[QUAL_T_HIGHEST] = links[0].replace(',','')
-    d[QUAL_T_HD] = links[0].replace(',','')
-    if(len(links) > 0):
-        d[QUAL_T_HIGH] = links[1].replace(',','')
+    d[QUAL_T_HIGHEST] = links[0]
+    d[QUAL_T_HD] = links[0]
+    Log("Dict len: %d" % len(links))
     if(len(links) > 1):
-        d[QUAL_T_MED] = links[2].replace(',','')
+        d[QUAL_T_HIGH] = links[1]
     if(len(links) > 2):
-        d[QUAL_T_LOW] = links[3].replace(',','')
+        d[QUAL_T_MED] = links[2]
+    if(len(links) > 3):
+        d[QUAL_T_LOW] = links[3]
 
     #Log(d)
     return d
