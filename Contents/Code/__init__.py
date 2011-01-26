@@ -75,7 +75,7 @@ def Start():
 # Menu builder methods
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def MainMenu():
-    menu = MediaContainer(viewGroup="List")
+    menu = MediaContainer(viewGroup="List", title1= "SVT Play " + VERSION)
     menu.Append(Function(DirectoryItem(ListRecommended, title=RECOMMENDED, thumb=R('main_rekommenderat.png'))))
     menu.Append(Function(DirectoryItem(ListMostViewed, title=MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
     menu.Append(Function(DirectoryItem(ListCategories, title=CATEGORIES, thumb=R('main_kategori.png'))))
@@ -100,7 +100,7 @@ def ListCategories(sender):
         icon = element.xpath("img")[0]
         categories.append((categoryName, categoryUrl, categoryIconName))
 
-    catList = MediaContainer()
+    catList = MediaContainer(title1=CATEGORIES)
     for category in categories:
         HTTP.PreCache(category[1])
         catList.Append(Function(DirectoryItem(ListCategory, title=category[0], thumb=R(category[2])), name=category[0], url=category[1]))
@@ -109,7 +109,7 @@ def ListCategories(sender):
 
 def ListCategory(sender, name, url):
     Log("Name: %s Url: %s" % (name,url))
-    showsList = MediaContainer()
+    showsList = MediaContainer(title1=name)
     paginateUrl= FindPaginateUrl(url)
     paginateUrl = url + '/' + paginateUrl 
 
