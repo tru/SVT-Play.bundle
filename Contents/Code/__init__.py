@@ -320,6 +320,36 @@ def BuildShowEpisodesMenu(url, divId):
         menuItems = Paginate(completeUrl % 1, completeUrl, divId, BuildGenericMenu)
         return menuItems
 
+def HandleSection(sender, url):
+    menuItems = []
+
+def BuildSectionsMenu(sender, url):
+    sectionsMenu = MediaContainer()
+    pageElement = HTML.ElementFromURL(url)
+    Log("BuildSectionsMenu: %s" % url)
+
+    sections = pageElement.xpath("//div[@id='sb']//div[@class='navigation player-header']//a[starts-with(@href, '?')]")
+    if(len(sections) == 0): 
+        return None
+
+    #cut out base url 
+    baseUrl = url 
+    quarkIndex = url.find('?')
+    if(quarkIndex > -1):
+        baseUrl = url[0:quarkIndex]
+    
+    sectionItems = []
+
+    for section in sections:
+        sectionName = section.text
+        sectionUrl = section.get("href")
+        Log("Name: %s" % sectionName)
+        Log("Complete Url: %s" % baseUrl + sectionUrl)
+        sectionItems.append(Function(DirectoryItem(HandleSection, sectionName), baseUrl + sectionUrl))
+
+    sectionsMenu.Extend(sectionItems)
+    return sectionsMenu 
+
 # Main method for sucking out svtplay content
 def BuildGenericMenu(url, divId):
     menuItems = []
@@ -327,6 +357,12 @@ def BuildGenericMenu(url, divId):
     Log("url: %s divId: %s" % (url, divId))
     xpathBase = "//div[@id='%s']" % (divId)
     Log("xpath expr: " + xpathBase)
+
+    sections = pageElement.xpath("//div[@id='sb']//div[@class='navigation player-header']//a[starts-with(@href, '?')]")
+    if(len(sections) > 0):
+        d = Function(DirectoryItem(BuildSectionsMenu, title="Sektioner", subtitle="Undersektioner:", summary="summary"), url=url)
+        Log("Appending sections with len: %d" % len(sections))
+        menuItems.append(d)
 
     clipLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/v/')]")
     for clipLink in clipLinks:
@@ -388,7 +424,7 @@ def HierarchyDown(sender, url, baseUrl, divId):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     
 def GetProgramInfo(programUrl):
-    programHtml = HTTP.Request(programUrl)
+    programHtml = HTTP.Request(url=programUrl, cacheTime=CACHE_TIME_LONG)
     infoElements = HTML.ElementFromString(programHtml).xpath("//div[@id='description-title']")
     if (len(infoElements) > 0):
         return infoElements[0].text.strip()
@@ -396,7 +432,7 @@ def GetProgramInfo(programUrl):
      
 def GetEpisodeInfo(episodeUrl):
     Log(episodeUrl)
-    episodeHtml = HTTP.Request(episodeUrl)
+    episodeHtml = HTTP.Request(url=episodeUrl, cacheTime=CACHE_TIME_LONG)
     episodeElements = HTML.ElementFromString(episodeHtml)
     infoElements = episodeElements.xpath("//div[@id='description-episode']")
     episodeInfo = NO_INFO
@@ -431,7 +467,7 @@ def GetContentUrl(pageElement):
     flashvars = pageElement.xpath("//object[@id='playerSwf']/param[@name='flashvars']")[0].get("value")
     
     #If it's an rtmp stream, try to find the different qualities
-    if(flashvars.find("rtmpe") > -1):
+    if(flashvars.find("rtmp") > -1):
         d = GetUrlQualitySelection(flashvars)
         try: 
             url = d[Prefs['quality']]
@@ -439,14 +475,16 @@ def GetContentUrl(pageElement):
             url = d[QUAL_T_HIGHEST]
         Log("Url selection: %s" % url) 
         return url 
-
+    else:
+        Log("Flashvars not found! Using first found stream")
+    
     return re.search(r'(pathflv=|dynamicStreams=url:)(.*?)[,&$]',flashvars).group(2)    
 
 def GetUrlQualitySelection(flashvars):
     #You could make this more sophisticated by checking that the link you select also
     #match the correct bitrate and not just assume they are in descending order
     Log("flashvars: %s" % flashvars)
-    links = re.findall("rtmpe.*?,", flashvars)
+    links = re.findall("rtmp.*?,", flashvars)
 
     cleanLinks = [link.replace(',','') for link in links]
     links = cleanLinks
@@ -461,7 +499,7 @@ def GetUrlQualitySelection(flashvars):
     if(len(links) > 3):
         d[QUAL_T_LOW] = links[3]
 
-    #Log(d)
+    Log(d)
     return d
     
 # Replaces all running whitespace characters with a single space
