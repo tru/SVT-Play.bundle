@@ -5,32 +5,19 @@ import string
 
 # Global constants
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-VERSION="1.3"
+VERSION="3.1"
 
 PLEX_PLAYER_URL = "http://www.plexapp.com/player/player.php?&url="
 PLEX_CLIP_PLAYER_URL = "http://www.plexapp.com/player/player.php?clip="
 PLUGIN_PREFIX	= "/video/svt"
 SITE_URL		= "http://svtplay.se"
-LATEST_SHOWS_URL = "http://svtplay.se/?/pb,a1364143,%d,f,-1"
-MOST_VIEWED_URL = "http://svtplay.se/?/pb,a1364144,%d,f,-1"
-RECOMMENDED_URL = "http://svtplay.se/?/pb,a1364142,%d,f,-1"
-LATEST_VIDEOS_URL = "http://svtplay.se/?/cb,a1364145,%d,f,-1"
-LATEST_NEWS_SHOWS_URL = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1527537,%d,f,-1"
 LIVE_URL = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
-CATEGORIES_URL = SITE_URL + "/kategorier"
 INDEX_URL = SITE_URL + "/alfabetisk?am,,%d,thumbs"
 
 
 #Texts
-NO_INFO = u'Beskrivning saknas.'
-LATEST_SHOWS = u'Senaste program'
-LATEST_NEWS_SHOWS = u'Senaste nyhetsprogram'
-LATEST_VIDEOS = u'Senaste klipp'
-RECOMMENDED = u'Rekommenderat'
-MOST_VIEWED = u'Mest sedda'
 LIVE_SHOWS = u'Livesändningar'
 INDEX_SHOWS = u'Program A-Ö'
-CATEGORIES = u'Kategorier'
 
 #The page step function will only step this many pages deep. Can be changed / function call.
 MAX_PAGINATE_PAGES = 100
@@ -54,124 +41,28 @@ QUAL_T_HIGH = u"Hög"
 QUAL_T_MED = u"Medel"
 QUAL_T_LOW = u"Låg"
 
+#Prefs settings
+PREF_QUALITY = 'quality'
 
 # Initializer called by the framework
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 def Start():
     Plugin.AddPrefixHandler(PLUGIN_PREFIX, MainMenu, "SVT Play", "icon-default.png", "art-default.jpg")
     HTTP.CacheTime = CACHE_TIME_SHORT
-    #Locale.SetDefaultLocale(loc="se")
     #HTTP.PreCache(INDEX_URL % 1)
-    #HTTP.PreCache(LATEST_SHOWS_URL % 1)
-    #HTTP.PreCache(MOST_VIEWED_URL % 1)
-    #HTTP.PreCache(RECOMMENDED_URL % 1)
-    #HTTP.PreCache(LATEST_VIDEOS_URL % 1)
-    #HTTP.PreCache(LATEST_NEWS_SHOWS_URL % 1)
-    HTTP.PreCache(CATEGORIES_URL)
     MediaContainer.art = R(ART)
     
-    Log("Quality Setting: %s" % Prefs['quality'])
+    Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def MainMenu():
     menu = MediaContainer(viewGroup="List", title1= "SVT Play " + VERSION)
-    menu.Append(Function(DirectoryItem(ListRecommended, title=RECOMMENDED, thumb=R('main_rekommenderat.png'))))
-    menu.Append(Function(DirectoryItem(ListMostViewed, title=MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
-    menu.Append(Function(DirectoryItem(ListCategories, title=CATEGORIES, thumb=R('main_kategori.png'))))
-    menu.Append(Function(DirectoryItem(ListLatestShows, title=LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
-    menu.Append(Function(DirectoryItem(ListLatestNewsShows, title=LATEST_NEWS_SHOWS, thumb=R('category_nyheter.png'))))
-    menu.Append(Function(DirectoryItem(ListLatestVideos, title=LATEST_VIDEOS, thumb=R('main_senaste_klipp.png'))))
-    menu.Append(Function(DirectoryItem(ListLiveMenu, title=LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(Function(DirectoryItem(ListAllShows, title=INDEX_SHOWS, thumb=R('main_index.png'))))
+    menu.Append(Function(DirectoryItem(ListLiveMenu, title=LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(PrefsItem(u"Inställningar"))
     return menu
 
-def ListCategories(sender):
-    Log("ListCategories")
-    pageElement = HTML.ElementFromURL(CATEGORIES_URL).xpath("//li/div[@class='container']/a")
-    categories = []
-    for element in pageElement:
-        categoryName = element.xpath("span[@class='category-header']/text()")[0]
-        categoryUrl = SITE_URL + element.get("href") 
-        categoryIconName = "category_" + re.search(r'(\w+)$',categoryUrl).group(1) + ".png"
-        Log("Name %s, URL %s" % (categoryName, categoryUrl))
-        Log("Icon: %s " % categoryIconName)
-        icon = element.xpath("img")[0]
-        categories.append((categoryName, categoryUrl, categoryIconName))
-
-    catList = MediaContainer(title1=CATEGORIES)
-    for category in categories:
-        HTTP.PreCache(category[1])
-        catList.Append(Function(DirectoryItem(ListCategory, title=category[0], thumb=R(category[2])), name=category[0], url=category[1]))
-
-    return catList
-
-def ListCategory(sender, name, url):
-    Log("Name: %s Url: %s" % (name,url))
-    showsList = MediaContainer(title1=name)
-    paginateUrl= FindPaginateUrl(url)
-    paginateUrl = url + '/' + paginateUrl 
-
-    if name == 'Barn':
-        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
-    elif name == 'Film & drama':
-        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
-    elif name == 'Kultur & nöje':
-        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
-    elif name == 'Samhälle & fakta':
-        showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "pb", IndexShows))
-    elif name == 'Nyheter':
-        showsList.Extend(IndexShows(url, "sb"))
-        showsList.Extend(IndexShows(url, "se"))
-    elif name == 'Sport':
-        showsList.Append(Function(DirectoryItem(key=ListSportShows, title="Sportprogram", subtitle="Lista alla sportprogram"), paginateUrl=paginateUrl))
-        showsList.Append(Function(DirectoryItem(key=ListSports, title="Se sporter", subtitle="Lista alla sporter"), url=url))
-
-    return showsList
-
-def ListSports(sender, url):
-    Log("FindSports: %s" % url)
-    pageElement = HTML.ElementFromURL(url)
-    xpath = "//div[@id='bs']//li//a[starts-with(@href, '/t/')]"
-    sports = pageElement.xpath(xpath)
-    sportsList = MediaContainer()
-    for sport in sports:
-        sportUrl = SITE_URL + sport.get("href")
-        sportName = sport.xpath("text()")[0]
-        Log("Name: %s, URL: %s " % (sportName, sportUrl))
-        sportsList.Append(Function(DirectoryItem(key=ListSport, title=sportName), sportUrl=sportUrl))
-
-    return sportsList
-
-def ListSport(sender, sportUrl):
-    Log(sportUrl)
-    pageElement = HTML.ElementFromURL(sportUrl)
-    sections = pageElement.xpath("//div[@id='sb']//div[@class='navigation player-header']//a[starts-with(@href, '?')]")
-    Log("%d, %s" % (len(sections), sections))
-    sectionsList = MediaContainer()
-    for section in sections:
-        sectionUrl=sportUrl + section.get("href")
-        sectionName=section.xpath("text()")[0]
-        Log("%s, Url: %s" % (sectionName, sectionUrl))
-        sectionsList.Append(Function(DirectoryItem(key=ListSportSection, title=sectionName), url=sectionUrl, sportUrl=sportUrl))
-
-    return sectionsList
-
-def ListSportSection(sender, url, sportUrl):
-    Log(url)
-    paginateUrl = sportUrl + FindPaginateUrl(url)
-    showsList = MediaContainer()
-    showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "sb", IndexShows))
-    return showsList
-
-
-def ListSportShows(sender, paginateUrl):
-    showsList = MediaContainer()
-    Log("ListSportShows")
-    Log(paginateUrl)
-    showsList.Extend(Paginate(paginateUrl % 1, paginateUrl, "sb", IndexShows))
-    return showsList
 
 def ListAllShows(sender):
     Log("ListAllShows")
@@ -194,42 +85,6 @@ def IndexShows(url, divId):
 
     return BuildGenericMenu(url, divId)
     
-def ListLatestShows(sender):
-    Log("ListLatestShows")
-    showsList = MediaContainer()
-    #Paginate only a few pages...
-    showsList.Extend(Paginate(LATEST_SHOWS_URL % 1, LATEST_SHOWS_URL, "pb", BuildGenericMenu, 3))
-    return showsList
-
-def ListLatestNewsShows(sender):
-    Log("ListLatestNewsShows")
-    showsList = MediaContainer()
-    #Paginate only a few pages
-    showsList.Extend(Paginate(LATEST_NEWS_SHOWS_URL % 1, LATEST_NEWS_SHOWS_URL, "pb", BuildGenericMenu, 3))
-    return showsList
-
-def ListLatestVideos(sender):
-    Log("ListLatestVideos")
-    showsList = MediaContainer()
-    #Paginate only a few pages
-    showsList.Extend(Paginate(LATEST_VIDEOS_URL % 1, LATEST_VIDEOS_URL, "cb", BuildGenericMenu, 3))
-    Log("Clips %d" % len(showsList))
-    return showsList
-
-def ListRecommended(sender):
-    Log("ListRecommended")
-    showsList = MediaContainer()
-    #Paginate only a few pages
-    showsList.Extend(Paginate(RECOMMENDED_URL % 1, RECOMMENDED_URL, "pb", BuildGenericMenu))
-    return showsList
-
-def ListMostViewed(sender):
-    Log("ListMostViewed")
-    showsList = MediaContainer()
-    #Paginate only a few pages...
-    showsList.Extend(Paginate(MOST_VIEWED_URL % 1, MOST_VIEWED_URL, "pb", BuildGenericMenu))
-    return showsList
-
 def ListShowEpisodes(sender, showName, showUrl):
     Log("ListShowEpisodes: %s, %s" %  (showName, showUrl))
     epList = MediaContainer()
@@ -358,11 +213,11 @@ def BuildGenericMenu(url, divId):
     xpathBase = "//div[@id='%s']" % (divId)
     Log("xpath expr: " + xpathBase)
 
-    sections = pageElement.xpath("//div[@id='sb']//div[@class='navigation player-header']//a[starts-with(@href, '?')]")
-    if(len(sections) > 0):
-        d = Function(DirectoryItem(BuildSectionsMenu, title="Sektioner", subtitle="Undersektioner:", summary="summary"), url=url)
-        Log("Appending sections with len: %d" % len(sections))
-        menuItems.append(d)
+    #sections = pageElement.xpath("//div[@id='sb']//div[@class='navigation player-header']//a[starts-with(@href, '?')]")
+    #if(len(sections) > 0):
+        #d = Function(DirectoryItem(BuildSectionsMenu, title="Sektioner", subtitle="Undersektioner:", summary="summary"), url=url)
+        #Log("Appending sections with len: %d" % len(sections))
+        #menuItems.append(d)
 
     clipLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/v/')]")
     for clipLink in clipLinks:
