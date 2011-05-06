@@ -6,18 +6,23 @@ import string
 # Global constants
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 VERSION="3.1"
+PLUGIN_PREFIX	= "/video/svt"
 
 PLEX_PLAYER_URL = "http://www.plexapp.com/player/player.php?&url="
 PLEX_CLIP_PLAYER_URL = "http://www.plexapp.com/player/player.php?clip="
-PLUGIN_PREFIX	= "/video/svt"
 SITE_URL		= "http://svtplay.se"
 LIVE_URL = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
-INDEX_URL = SITE_URL + "/alfabetisk?am,,%d,thumbs"
+INDEX_URL = SITE_URL + "/alfabetisk"
+INDEX_URL_THUMB = INDEX_URL + "?am,,%d,thumbs"
 
+#URLs
+URL_SITE = "http://svtplay.se"
+URL_INDEX = URL_SITE + "/alfabetisk"
 
 #Texts
-LIVE_SHOWS = u'Livesändningar'
-INDEX_SHOWS = u'Program A-Ö'
+TEXT_LIVE_SHOWS = u'Livesändningar'
+TEXT_INDEX_SHOWS = u'Program A-Ö'
+TEXT_TITLE = "SVT Play"
 
 #The page step function will only step this many pages deep. Can be changed / function call.
 MAX_PAGINATE_PAGES = 100
@@ -34,7 +39,6 @@ QUAL_MED = 2
 QUAL_LOW = 3
 
 #These must match text strings in DefaultPrefs.json
-#"values":["Högsta", "HD", "Hög", "Medel", "Låg"],
 QUAL_T_HIGHEST = u"Högsta"
 QUAL_T_HD = u"HD"
 QUAL_T_HIGH = u"Hög"
@@ -47,9 +51,9 @@ PREF_QUALITY = 'quality'
 # Initializer called by the framework
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 def Start():
-    Plugin.AddPrefixHandler(PLUGIN_PREFIX, MainMenu, "SVT Play", "icon-default.png", "art-default.jpg")
-    HTTP.CacheTime = CACHE_TIME_SHORT
-    #HTTP.PreCache(INDEX_URL % 1)
+    Plugin.AddPrefixHandler(PLUGIN_PREFIX, MainMenu, TEXT_TITLE, "icon-default.png", "art-default.jpg")
+    #HTTP.CacheTime = CACHE_TIME_SHORT
+    HTTP.PreCache(URL_INDEX)
     MediaContainer.art = R(ART)
     
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
@@ -57,20 +61,32 @@ def Start():
 # Menu builder methods
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def MainMenu():
-    menu = MediaContainer(viewGroup="List", title1= "SVT Play " + VERSION)
-    menu.Append(Function(DirectoryItem(ListAllShows, title=INDEX_SHOWS, thumb=R('main_index.png'))))
-    menu.Append(Function(DirectoryItem(ListLiveMenu, title=LIVE_SHOWS, thumb=R('main_live.png'))))
+    menu = MediaContainer(viewGroup="List", title1= TEXT_TITLE + " " + VERSION)
+    menu.Append(Function(DirectoryItem(ListIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
+    #menu.Append(Function(DirectoryItem(ListLiveMenu, title=LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(PrefsItem(u"Inställningar"))
     return menu
 
+def ListIndexShows(sender):
+    Log("ListIndexShows")
+    showsList = MediaContainer(title1=TEXT_INDEX_SHOWS)
+    xpathBase = "//div[@class='tab active']"
+    pageElement = HTML.ElementFromURL(URL_INDEX)
+    programLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/t/')]")
+    for programLink in programLinks:
+        showUrl = URL_SITE + programLink.get("href")
+        showName = programLink.xpath("text()")[0]
+        Log("Program Link: %s" % showName)
+        showsList.Append(DirectoryItem(key=showUrl,title=showName))
+    return showsList
 
-def ListAllShows(sender):
+def ListAllShowsThumb(sender):
     Log("ListAllShows")
     showsList = MediaContainer()
     showsList.Extend(Paginate(INDEX_URL % 1, INDEX_URL, "am", IndexShows))
     return showsList
 
-def IndexShows(url, divId):
+def IndexShowsThumb(url, divId):
     Log("Index Shows...")
     # Note: must have "span" element, otherwise some wierd stuff can come along...
     xpathBase = "//div[@id='%s']" % (divId)
