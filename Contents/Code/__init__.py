@@ -124,45 +124,7 @@ def GetProgramInfo(programUrl):
     return NO_INFO
      
    
-def GetContentUrl(pageElement):
-    flashvars = pageElement.xpath("//object[@id='playerSwf']/param[@name='flashvars']")[0].get("value")
-    
-    #If it's an rtmp stream, try to find the different qualities
-    if(flashvars.find("rtmp") > -1):
-        d = GetUrlQualitySelection(flashvars)
-        try: 
-            url = d[Prefs['quality']]
-        except KeyError:
-            url = d[QUAL_T_HIGHEST]
-        Log("Url selection: %s" % url) 
-        return url 
-    else:
-        Log("Flashvars not found! Using first found stream")
-    
-    return re.search(r'(pathflv=|dynamicStreams=url:)(.*?)[,&$]',flashvars).group(2)    
-
-def GetUrlQualitySelection(flashvars):
-    #You could make this more sophisticated by checking that the link you select also
-    #match the correct bitrate and not just assume they are in descending order
-    Log("flashvars: %s" % flashvars)
-    links = re.findall("rtmp.*?,", flashvars)
-
-    cleanLinks = [link.replace(',','') for link in links]
-    links = cleanLinks
-    d = dict()
-    d[QUAL_T_HIGHEST] = links[0]
-    d[QUAL_T_HD] = links[0]
-    Log("Dict len: %d" % len(links))
-    if(len(links) > 1):
-        d[QUAL_T_HIGH] = links[1]
-    if(len(links) > 2):
-        d[QUAL_T_MED] = links[2]
-    if(len(links) > 3):
-        d[QUAL_T_LOW] = links[3]
-
-    Log(d)
-    return d
-    
+   
 # Replaces all running whitespace characters with a single space
 def strip_all(str):
     return string.join(string.split(str), ' ')
