@@ -7,10 +7,7 @@ PLUGIN_PREFIX	= "/video/svt"
 
 PLEX_PLAYER_URL = "http://www.plexapp.com/player/player.php?&url="
 PLEX_CLIP_PLAYER_URL = "http://www.plexapp.com/player/player.php?clip="
-SITE_URL		= "http://svtplay.se"
 LIVE_URL = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
-INDEX_URL = SITE_URL + "/alfabetisk"
-INDEX_URL_THUMB = INDEX_URL + "?am,,%d,thumbs"
 
 #URLs
 URL_SITE = "http://svtplay.se"
@@ -22,6 +19,7 @@ URL_INDEX_THUMB = URL_INDEX + "?am,,%d,thumbs"
 TEXT_LIVE_SHOWS = u'Livesändningar'
 TEXT_INDEX_SHOWS = u'Program A-Ö'
 TEXT_TITLE = "SVT Play"
+TEXT_NO_INFO = "Ingen information hittades"
 
 #The page step function will only step this many pages deep. Can be changed / function call.
 MAX_PAGINATE_PAGES = 100
@@ -50,9 +48,67 @@ PREF_QUALITY = 'quality'
 #random stuff
 TAG_DIV_ID = "//div[@id='%s']" 
 
-class ShowInfo:
-    def __init__(self):
-        self.thumbnailUrl = None
-        self.name = None
-        self.info = None
-        self.showUrl = None
+
+def Paginate(startUrl, requestUrl, divId, callFunc, maxPages = MAX_PAGINATE_PAGES):
+    Log("Pagination in progress...")
+    menuItems = []
+    pageElement = HTML.ElementFromURL(startUrl)
+    xpathBase = TAG_DIV_ID  % (divId)
+    paginationLinks = pageElement.xpath(xpathBase + "//div[@class='pagination']//li[@class='']/a")
+    Log("Pagination links len: %d" % len(paginationLinks))
+    start = 1
+    linkPages = len(paginationLinks)
+    if(linkPages > 0): 
+        stop = int(paginationLinks[linkPages-1].text)
+        stop = min(stop, maxPages)
+    else:
+        stop = 1
+
+    Log("Start: %s, Stop: %s" % (start, stop))
+
+    for i in range(start, stop + 1):
+        nextUrl = requestUrl % i
+        Log("Precaching %s" % nextUrl)
+        HTTP.PreCache(nextUrl)
+
+    for i in range(start, stop + 1):
+        nextUrl = requestUrl % i
+        Log(nextUrl)
+        menuItems = menuItems + callFunc(nextUrl, divId)
+    return menuItems
+
+def FindPaginateUrl(url):
+    pageElement = HTML.ElementFromURL(url)
+    #Pick the first a href after the pagination div tag and treat it as the base link
+    paginateUrl = pageElement.xpath("//div[@class='pagination']//a[starts-with(@href,'?')]")[0].get("href")
+    #Replace the index number in the url to a %d so that we can easily loop over all the pages
+    p2 = string.split(paginateUrl, ',')
+    p2[len(p2) - 3] = "%d"
+    paginateUrl =  string.join(p2, ',')
+    return paginateUrl
+
+def GetPaginatePages(url):
+    paginateUrl = FindPaginateUrl(url)
+    pageElement = HTML.ElementFromURL(url)
+    xpathBase = TAG_DIV_ID  % "sb"
+    paginationLinks = pageElement.xpath(xpathBase + "//div[@class='pagination']//li[@class='']/a")
+    Log("Pagination links len: %d" % len(paginationLinks))
+    start = 1
+    linkPages = len(paginationLinks)
+    if(linkPages > 0): 
+        stop = int(paginationLinks[linkPages-1].text)
+    else:
+        stop = 1
+
+    Log("Start: %s, Stop: %s" % (start, stop))
+
+    paginatePages = []
+    for i in range(start, stop + 1):
+        nextUrl = url + paginateUrl % i
+        paginatePages.append(nextUrl)
+    
+    for url in paginatePages:
+        Log(url)
+        HTTP.PreCache(nextUrl)
+    
+    return paginatePages

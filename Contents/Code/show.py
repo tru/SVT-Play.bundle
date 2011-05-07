@@ -4,10 +4,42 @@ import re
 import string
 from common import *
 
+class ShowInfo:
+    def __init__(self):
+        self.thumbNailUrl = None
+        self.name = None
+        self.info = None
+        self.url = None
+        self.episodes = []
+
+
 def ReindexShows(maxPaginatePages = 100):
     Log("Reindex shows")
     ReindexPaginate(URL_INDEX_THUMB % 1, URL_INDEX_THUMB, "am", Dummy, maxPaginatePages)
 
+def GetIndexShows(sender):
+    Log("GetIndexShows")
+    showsList = MediaContainer(title1=TEXT_INDEX_SHOWS)
+    xpathBase = "//div[@class='tab active']"
+    pageElement = HTML.ElementFromURL(URL_INDEX)
+    programLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/t/')]")
+    for programLink in programLinks:
+        showUrl = URL_SITE + programLink.get("href")
+        showName = programLink.xpath("text()")[0]
+        Log("Program Link: %s" % showName)
+        if(Data.Exists(showName)):
+            si = Data.LoadObject(showName)
+            Log("SHOW: %s " % si.name)
+            Log("subtitle: %s" % si.info)
+            Log("thumbnail: %s " % si.thumbNailUrl)
+            showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName, summary=si.info,
+                thumb=si.thumbnailUrl), showInfo = si))
+        else:
+            showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName), showInfo = None, showUrl =
+                showUrl))
+            
+    return showsList
+ 
 def Dummy():
     Log("Dummy")
 
@@ -58,7 +90,7 @@ def GetShowInfo(showUrl):
     si.name = showName
     si.info = showInfo
     si.thumbnailUrl = showImageUrl
-    si.showUrl = showUrl
+    si.url = showUrl
     if(len(showName) > 0):
         Log("Saving data for: %s " % showName)
         Data.SaveObject(showName, si) 
