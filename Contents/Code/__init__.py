@@ -9,12 +9,12 @@ from common import *
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 def Start():
     Plugin.AddPrefixHandler(PLUGIN_PREFIX, MainMenu, TEXT_TITLE, "icon-default.png", "art-default.jpg")
-    #HTTP.CacheTime = CACHE_TIME_SHORT
+    HTTP.CacheTime = CACHE_TIME_SHORT
     HTTP.PreCache(URL_INDEX)
     MediaContainer.art = R(ART)
     
     #Create thread to reindex shows in the background
-    Thread.Create(ReindexShows, MAX_PAGINATE_PAGES)
+    #Thread.Create(ReindexShows, MAX_PAGINATE_PAGES)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods
@@ -41,41 +41,21 @@ def ListIndexShows(sender):
             Log("SHOW: %s " % si.name)
             Log("subtitle: %s" % si.info)
             Log("thumbnail: %s " % si.thumbnailUrl)
-            showsList.Append(DirectoryItem(key=showUrl,title=showName, summary=si.info, thumb=si.thumbnailUrl))
+            showsList.Append(Function(DirectoryItem(key=ListShowEpisodes,title=showName, summary=si.info,
+                thumb=si.thumbnailUrl), showName=showName, showUrl=showUrl))
         else:
-            showsList.Append(DirectoryItem(key=showUrl,title=showName))
+            showsList.Append(Function(DirectoryItem(key=ListShowEpisodes,title=showName), showName=showName, showUrl=showUrl))
             
     return showsList
-
-def ListAllShowsThumb(sender):
-    Log("ListAllShows")
-    showsList = MediaContainer()
-    showsList.Extend(Paginate(INDEX_URL % 1, INDEX_URL, "am", IndexShows))
-    return showsList
-
-def IndexShowsThumb(url, divId):
-    Log("Index Shows...")
-    # Note: must have "span" element, otherwise some wierd stuff can come along...
-    xpathBase = "//div[@id='%s']" % (divId)
-    pageElement = HTML.ElementFromURL(url)
-    programLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href, '/t/')]/span/..")
-    programUrls = [] 
-    for programLink in programLinks:
-        newUrl = SITE_URL + programLink.get("href")
-        programUrls.append(newUrl)
-        Log("Program URL!!! --> %s" % newUrl)
-        HTTP.PreCache(newUrl)
-
-    return BuildGenericMenu(url, divId)
-    
+   
 def ListShowEpisodes(sender, showName, showUrl):
     Log("ListShowEpisodes: %s, %s" %  (showName, showUrl))
     epList = MediaContainer()
-    episodes = BuildShowEpisodesMenu(showUrl, "sb")
-    for ep in episodes:
-        Log(ep)
-        epList.Append(ep)
-    Log("Added %s items" % len(epList))
+    #episodes = BuildShowEpisodesMenu(showUrl, "sb")
+    #for ep in episodes:
+        #Log(ep)
+        #epList.Append(ep)
+    #Log("Added %s items" % len(epList))
     return epList
 
 
@@ -157,36 +137,6 @@ def BuildShowEpisodesMenu(url, divId):
         Log("CompleteURL: %s" % completeUrl)
         menuItems = Paginate(completeUrl % 1, completeUrl, divId, BuildGenericMenu)
         return menuItems
-
-def HandleSection(sender, url):
-    menuItems = []
-
-def BuildSectionsMenu(sender, url):
-    sectionsMenu = MediaContainer()
-    pageElement = HTML.ElementFromURL(url)
-    Log("BuildSectionsMenu: %s" % url)
-
-    sections = pageElement.xpath("//div[@id='sb']//div[@class='navigation player-header']//a[starts-with(@href, '?')]")
-    if(len(sections) == 0): 
-        return None
-
-    #cut out base url 
-    baseUrl = url 
-    quarkIndex = url.find('?')
-    if(quarkIndex > -1):
-        baseUrl = url[0:quarkIndex]
-    
-    sectionItems = []
-
-    for section in sections:
-        sectionName = section.text
-        sectionUrl = section.get("href")
-        Log("Name: %s" % sectionName)
-        Log("Complete Url: %s" % baseUrl + sectionUrl)
-        sectionItems.append(Function(DirectoryItem(HandleSection, sectionName), baseUrl + sectionUrl))
-
-    sectionsMenu.Extend(sectionItems)
-    return sectionsMenu 
 
 # Main method for sucking out svtplay content
 def BuildGenericMenu(url, divId):

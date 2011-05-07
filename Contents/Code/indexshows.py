@@ -45,9 +45,9 @@ def FindAllShows(pageElement):
 def GetShowInfo(showUrl):
     Log("Getting info from: %s " % showUrl)
     pageElement = HTML.ElementFromURL(showUrl)
-    showImageUrl = pageElement.xpath("//meta[@property='og:image']/@content")[0]
-    showInfo = (pageElement.xpath("//meta[@property='og:description']/@content")[0]
-    title = pageElement.xpath("//meta[@property='og:title']/@content")[0]
+    showImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
+    showInfo = str(pageElement.xpath("//meta[@property='og:description']/@content")[0])
+    title = str(pageElement.xpath("//meta[@property='og:title']/@content")[0])
     showName = string.strip(string.split(title, '|')[0])
     Log("showName: %s" % showName)
     Log(showInfo)
