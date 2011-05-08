@@ -2,6 +2,7 @@
 
 import re
 import string
+import cerealizer
 from show import *
 from common import *
 from episode import *
@@ -13,8 +14,10 @@ def Start():
     HTTP.CacheTime = CACHE_TIME_SHORT
     HTTP.PreCache(URL_INDEX)
     MediaContainer.art = R(ART)
-    
-    #Create thread to reindex shows in the background
+
+    cerealizer.register(ShowInfo)
+    cerealizer.register(EpisodeInfo)
+   
     Thread.Create(ReindexShows, MAX_PAGINATE_PAGES)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 

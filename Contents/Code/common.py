@@ -18,8 +18,8 @@ URL_PLEX_PLAYER = "http://www.plexapp.com/player/player.php?&url="
 #Texts
 TEXT_LIVE_SHOWS = u'Livesändningar'
 TEXT_INDEX_SHOWS = u'Program A-Ö'
-TEXT_TITLE = "SVT Play"
-TEXT_NO_INFO = "Ingen information hittades"
+TEXT_TITLE = u'SVT Play'
+TEXT_NO_INFO = u'Ingen information hittades'
 
 #The page step function will only step this many pages deep. Can be changed / function call.
 MAX_PAGINATE_PAGES = 100

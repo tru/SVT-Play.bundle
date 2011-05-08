@@ -92,7 +92,9 @@ def GetShowInfo(showUrl):
     si.info = showInfo
     si.thumbNailUrl = showImageUrl
     si.url = showUrl
+
     if(len(showName) > 0):
         Log("Saving data for: %s " % showName)
+        Log("ShowInfo: %s" % si)
         Data.SaveObject(showName, si) 
 
