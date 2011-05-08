@@ -29,8 +29,12 @@ def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
         Log("EPURL: %s" % epUrl)
         epInfo = GetEpisodeInfo(epUrl)
         contentUrl = GetContentUrlFromUserQualSettings(epInfo)
-        epList.Append(Function(VideoItem(key=PlayVideo, title=epInfo.title, summary=epInfo.info, duration=epInfo.length,
-            thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl), url=contentUrl))
+        if(contentUrl.endswith('.flv')):
+            epList.Append(VideoItem(key=contentUrl, title=epInfo.title, summary=epInfo.info, duration=epInfo.length,
+                thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl))
+        else:
+            epList.Append(Function(VideoItem(key=PlayVideo, title=epInfo.title, summary=epInfo.info,
+                duration=epInfo.length, thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl), url=contentUrl))
 
     return epList
 
@@ -40,12 +44,17 @@ def PlayVideo(sender, url):
 
 
 def GetContentUrlFromUserQualSettings(epInfo):
-    url = epInfo.qualities[Prefs['quality']]
-    if (url.endswith('.mp4')):
-        #special case rmpte stream with mp4 ending.
-        url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=mp4:")
-    else:
-        url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=")
+    try:
+        url = epInfo.qualities[Prefs['quality']]
+    except KeyError:
+        url = ""
+
+    if(string.find(url, "rtmp") > -1):
+        if (url.endswith('.mp4')):
+            #special case rmpte stream with mp4 ending.
+            url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=mp4:")
+        else:
+            url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=")
 
     return url
 
@@ -149,14 +158,29 @@ def GetContentUrls(pageElement):
     Log("Flashvars: %s" % flashvars)
     if(len(flashvars) > 0):
         flashvars = flashvars[0]
-        urls = string.split(flashvars, "url:")
-        for url in urls:
-            Log("Content URLS: %s" % url)
-            if(string.find(url, "rtmp") > -1):
-                SetQuality(url, d)
-        Log("QualDict: %s" % d)
+#We can either get rtmp streams or flv
+        if(string.find(flashvars, "rtmp") > -1):
+            urls = string.split(flashvars, "url:")
+            for url in urls:
+                Log("Content URLS: %s" % url)
+                if(string.find(url, "rtmp") > -1):
+                    SetQuality(url, d)
+            Log("QualDict: %s" % d)
+            SetHighestQuality(d)
+        else:
+           tag = "pathflv="
+           index = string.find(flashvars, tag)
+           index = index + len(tag)
+           indexAnd = string.find(flashvars, "&", index)
+           if(index > -1 and indexAnd > -1):
+               url = flashvars[index:indexAnd]
+               Log("FLV file: %s" % url)
+               d[QUAL_T_HIGHEST] = url 
+               d[QUAL_T_HD] = url 
+               d[QUAL_T_HIGH] = url 
+               d[QUAL_T_MED] = url 
+               d[QUAL_T_LOW] = url 
     
-    SetHighestQuality(d)
     return d
 
 def SetQuality(contentUrl, d):
