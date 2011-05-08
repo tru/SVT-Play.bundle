@@ -17,8 +17,10 @@ def Start():
 
     cerealizer.register(ShowInfo)
     cerealizer.register(EpisodeInfo)
-   
-    Thread.Create(ReindexShows, MAX_PAGINATE_PAGES)
+
+    Dict["TEST"] = ShowInfo()
+    Dict["EPTEST"] = EpisodeInfo()
+    Thread.Create(ReindexShows)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods

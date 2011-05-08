@@ -19,14 +19,14 @@ def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
     else:
         Log("GetShowEpisodes (no showInfo):")
 
-    pages = GetPaginatePages(showUrl)
+    pages = GetPaginatePages(showUrl, "sb")
     epUrls = []
     for page in pages:
         epUrls = epUrls + GetEpisodeUrlsFromPage(page)
 
     epList = MediaContainer(title1=showName)
     for epUrl in epUrls:
-        Log("EPURL: %s" % epUrl)
+        #Log("EPURL: %s" % epUrl)
         epInfo = GetEpisodeInfo(epUrl)
         contentUrl = GetContentUrlFromUserQualSettings(epInfo)
         if(contentUrl.endswith('.flv')):
@@ -76,7 +76,7 @@ def GetEpisodeInfo(episodeUrl):
     pageElement = HTML.ElementFromURL(episodeUrl) 
 
     episodeImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
-    Log("Episode thumbnail: %s " % episodeImageUrl)
+    #Log("Episode thumbnail: %s " % episodeImageUrl)
 
     episodeTitle = pageElement.xpath("//meta[@property='og:title']/@content")[0]
     episodeTitle = string.split(episodeTitle, "|")[0]
@@ -90,7 +90,7 @@ def GetEpisodeInfo(episodeUrl):
 
     if(len(moreInfoUrl) > 0):
         infoUrl = URL_SITE + moreInfoUrl[0]
-        Log("MerInfoURL: %s " % infoUrl)
+        #Log("moreInfoUrl: %s " % infoUrl)
         infoElement = HTML.ElementFromURL(infoUrl)
         infoTexts = infoElement.xpath("//div[@id='wrapper']//p//text()")
         if(len(infoTexts) > 0):
@@ -113,7 +113,7 @@ def GetEpisodeInfo(episodeUrl):
         if (secondsMatch):
             seconds = int(secondsMatch.group(1))
 
-        Log("Episode length: %s %s %s" % (hours, minutes, seconds))
+        #Log("Episode length: %s %s %s" % (hours, minutes, seconds))
         episodeLengthMillis =  (1000 * (hours*60*60 + minutes*60 + seconds))
 
     contentUrls = GetContentUrls(pageElement)
@@ -155,7 +155,7 @@ def GetContentUrls(pageElement):
     flashvars = pageElement.xpath("(//div[@class='video']//param[@name='flashvars'])[1]/@value") 
     d = dict()
 
-    Log("Flashvars: %s" % flashvars)
+    #Log("Flashvars: %s" % flashvars)
     if(len(flashvars) > 0):
         flashvars = flashvars[0]
 #We can either get rtmp streams or flv
