@@ -162,10 +162,10 @@ def GetContentUrls(pageElement):
         if(string.find(flashvars, "rtmp") > -1):
             urls = string.split(flashvars, "url:")
             for url in urls:
-                Log("Content URLS: %s" % url)
+                #Log("Content URLS: %s" % url)
                 if(string.find(url, "rtmp") > -1):
                     SetQuality(url, d)
-            Log("QualDict: %s" % d)
+            #Log("QualDict: %s" % d)
             SetHighestQuality(d)
         else:
            tag = "pathflv="
