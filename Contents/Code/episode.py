@@ -160,7 +160,7 @@ def GetContentUrls(pageElement):
     if(len(flashvars) > 0):
         flashvars = flashvars[0]
 #We can either get rtmp streams or flv
-        if(string.find(flashvars, "rtmp") > -1):
+        if(string.find(flashvars, "dynamicStreams") > -1):
             urls = string.split(flashvars, "url:")
             for url in urls:
                 #Log("Content URLS: %s" % url)
