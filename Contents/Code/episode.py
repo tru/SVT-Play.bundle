@@ -73,7 +73,7 @@ def GetEpisodeUrlsFromPage(url):
 def GetEpisodeInfo(episodeUrl):
     Log(episodeUrl)
 
-    pageElement = HTML.ElementFromURL(episodeUrl) 
+    pageElement = HTML.ElementFromURL(episodeUrl, cacheTime = CACHE_TIME_EPISODE)
 
     episodeImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
     #Log("Episode thumbnail: %s " % episodeImageUrl)
@@ -121,6 +121,7 @@ def GetEpisodeInfo(episodeUrl):
     hiresImage = GetHiResThumbNail(pageElement)
     if(hiresImage != None):
         episodeImageUrl = hiresImage
+    HTTP.PreCache(episodeImageUrl, cacheTime = CACHE_TIME_EPISODE)
 
     epInfo = EpisodeInfo()
     epInfo.title = episodeTitle

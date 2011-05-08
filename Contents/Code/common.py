@@ -28,7 +28,9 @@ MAX_PAGINATE_PAGES = 100
 ART = "art-default.jpg"
 
 CACHE_TIME_LONG    = 60*60*24*30 # Thirty days
-CACHE_TIME_SHORT   = 60*10    # 5 minutes
+CACHE_TIME_SHORT   = 60*10    # 10  minutes
+CACHE_TIME_SHOW = CACHE_TIME_SHORT
+CACHE_TIME_EPISODE = CACHE_TIME_LONG
 
 #Quality shorts...
 QUAL_HD = 0

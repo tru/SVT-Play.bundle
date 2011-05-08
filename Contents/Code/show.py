@@ -16,7 +16,6 @@ class ShowInfo:
 def ReindexShows():
     Log("Reindex shows")
     pages = GetPaginatePages(URL_INDEX, "am", URL_INDEX_THUMB_PAGINATE)
-    Dict["TEST2"] = ShowInfo()
     for page in pages:
         pageElement = HTML.ElementFromURL(page)
         FindAllShows(pageElement)
@@ -59,7 +58,7 @@ def FindAllShows(pageElement):
 
 def GetShowInfo(showUrl):
     Log("Getting showinfo from: %s " % showUrl)
-    pageElement = HTML.ElementFromURL(showUrl)
+    pageElement = HTML.ElementFromURL(showUrl, cacheTime = CACHE_TIME_SHOW)
     showImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
     showInfo = str(pageElement.xpath("//meta[@property='og:description']/@content")[0])
     title = str(pageElement.xpath("//meta[@property='og:title']/@content")[0])
@@ -67,7 +66,7 @@ def GetShowInfo(showUrl):
     #Log(showInfo)
     #Log(showUrl)
     #Log(showImageUrl)
-    HTTP.Request(showImageUrl, cacheTime=60)
+    HTTP.Request(showImageUrl, cacheTime=CACHE_TIME_LONG)
     si = ShowInfo()
     si.name = str(showName)
     si.info = showInfo

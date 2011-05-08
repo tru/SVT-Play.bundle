@@ -18,8 +18,6 @@ def Start():
     cerealizer.register(ShowInfo)
     cerealizer.register(EpisodeInfo)
 
-    Dict["TEST"] = ShowInfo()
-    Dict["EPTEST"] = EpisodeInfo()
     Thread.Create(ReindexShows)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
@@ -120,15 +118,6 @@ def HierarchyDown(sender, url, baseUrl, divId):
 
 # Helpers
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    
-def GetProgramInfo(programUrl):
-    programHtml = HTTP.Request(url=programUrl, cacheTime=CACHE_TIME_LONG)
-    infoElements = HTML.ElementFromString(programHtml).xpath("//div[@id='description-title']")
-    if (len(infoElements) > 0):
-        return infoElements[0].text.strip()
-    return NO_INFO
-     
-   
    
 # Replaces all running whitespace characters with a single space
 def strip_all(str):
