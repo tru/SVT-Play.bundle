@@ -5,7 +5,6 @@
 VERSION="3.1"
 PLUGIN_PREFIX	= "/video/svt"
 
-PLEX_PLAYER_URL = "http://www.plexapp.com/player/player.php?&url="
 PLEX_CLIP_PLAYER_URL = "http://www.plexapp.com/player/player.php?clip="
 LIVE_URL = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
 
@@ -13,6 +12,7 @@ LIVE_URL = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
 URL_SITE = "http://svtplay.se"
 URL_INDEX = URL_SITE + "/alfabetisk"
 URL_INDEX_THUMB = URL_INDEX + "?am,,%d,thumbs"
+URL_PLEX_PLAYER = "http://www.plexapp.com/player/player.php?&url="
  
 
 #Texts

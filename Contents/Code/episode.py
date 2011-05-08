@@ -29,15 +29,24 @@ def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
         Log("EPURL: %s" % epUrl)
         epInfo = GetEpisodeInfo(epUrl)
         contentUrl = GetContentUrlFromUserQualSettings(epInfo)
-        epList.Append(VideoItem(key=contentUrl, title=epInfo.title, summary=epInfo.info, duration=epInfo.length,
-            thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl))
+        epList.Append(Function(VideoItem(key=PlayVideo, title=epInfo.title, summary=epInfo.info, duration=epInfo.length,
+            thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl), url=contentUrl))
 
     return epList
 
+def PlayVideo(sender, url):
+    Log("Request to play video: %s" % url)
+    return Redirect(WebVideoItem(url))
+
+
 def GetContentUrlFromUserQualSettings(epInfo):
-    #Log("DICTIONARY: %s" % epInfo.qualities)
     url = epInfo.qualities[Prefs['quality']]
-    #Log("SELECTED CONTENT URL: %s" % url)
+    if (url.endswith('.mp4')):
+        #special case rmpte stream with mp4 ending.
+        url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=mp4:")
+    else:
+        url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=")
+
     return url
 
 def GetEpisodeUrlsFromPage(url):
