@@ -26,22 +26,23 @@ def Start():
 def MainMenu():
     menu = MediaContainer(viewGroup="List", title1= TEXT_TITLE + " " + VERSION)
     menu.Append(Function(DirectoryItem(GetIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
-    #menu.Append(Function(DirectoryItem(ListLiveMenu, title=LIVE_SHOWS, thumb=R('main_live.png'))))
-    menu.Append(PrefsItem(u"Inställningar"))
+    menu.Append(Function(DirectoryItem(ListLiveMenu, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
+    menu.Append(PrefsItem(title=TEXT_PREFERENCES))
     return menu
 
 def ListLiveMenu(sender):
     showsList = MediaContainer()
-    liveElements = HTML.ElementFromURL(LIVE_URL)
+    liveElements = HTML.ElementFromURL(URL_LIVE)
     for element in liveElements.xpath("//span[@class='thumbnail']//a[@class='tableau']"):
         liveName = strip_all(unicode(element.xpath("../../../../h3/text()")[0]))        
         Log("LiveName: %s" % liveName)
-        liveUrl = SITE_URL +  element.get("href")
+        liveUrl = URL_SITE +  element.get("href")
        
         # Get the actual stream url from subpage and do some munging for the plex player to get it
-        liveContentUrl = GetEpisodeInfo(liveUrl)[2]
+        epInfo = GetEpisodeInfo(liveUrl)
+        liveContentUrl = GetContentUrlFromUserQualSettings(epInfo)
         liveContentUrl = re.sub(r'^(.*)/(.*)$','\\1&clip=\\2', liveContentUrl)
-        liveContentUrl = PLEX_PLAYER_URL + liveContentUrl +"&live=true&width=640&height=360"
+        liveContentUrl = URL_PLEX_PLAYER + liveContentUrl +"&live=true&width=640&height=360"
        
         Log("Live content url: " + liveContentUrl)
         liveIcon= element.xpath("descendant::img[starts-with(@class, 'thumbnail')]")[0].get("src")
