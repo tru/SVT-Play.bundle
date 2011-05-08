@@ -35,9 +35,9 @@ def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
     return epList
 
 def GetContentUrlFromUserQualSettings(epInfo):
-    Log("DICTIONARY: %s" % epInfo.qualities)
+    #Log("DICTIONARY: %s" % epInfo.qualities)
     url = epInfo.qualities[Prefs['quality']]
-    Log("SELECTED CONTENT URL: %s" % url)
+    #Log("SELECTED CONTENT URL: %s" % url)
     return url
 
 def GetEpisodeUrlsFromPage(url):
@@ -65,10 +65,11 @@ def GetEpisodeInfo(episodeUrl):
 
     infoElements = pageElement.xpath("//div[@id='description-episode']")
     episodeInfo = TEXT_NO_INFO
+    moreInfoUrl = ""
     if (len(infoElements) > 0):
         episodeInfo = infoElements[0].text.strip()
+        moreInfoUrl = infoElements[0].xpath("../a[@class='plus']/@href")
 
-    moreInfoUrl = infoElements[0].xpath("../a[@class='plus']/@href")
     if(len(moreInfoUrl) > 0):
         infoUrl = URL_SITE + moreInfoUrl[0]
         Log("MerInfoURL: %s " % infoUrl)
@@ -97,11 +98,7 @@ def GetEpisodeInfo(episodeUrl):
         Log("Episode length: %s %s %s" % (hours, minutes, seconds))
         episodeLengthMillis =  (1000 * (hours*60*60 + minutes*60 + seconds))
 
-    # Get the url for the stream
     contentUrls = GetContentUrls(pageElement)
-
-    #TODO
-    #Get HIRES ep image from the flashvars string
 
     hiresImage = GetHiResThumbNail(pageElement)
     if(hiresImage != None):
@@ -120,7 +117,12 @@ def GetEpisodeInfo(episodeUrl):
 def GetHiResThumbNail(pageElement):
     imageTag = "background="
     flashvars = pageElement.xpath("(//div[@class='video']//param[@name='flashvars'])[1]/@value") 
-    flashvars = flashvars[0]
+
+    if(len(flashvars) > 0):
+        flashvars = flashvars[0]
+    else:
+        return None
+
     index = string.find(flashvars, imageTag) 
     index = index + len(imageTag)
     indexAnd = string.find(flashvars, "&", index)
