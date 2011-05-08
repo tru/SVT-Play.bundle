@@ -36,7 +36,7 @@ def GetIndexShows(sender):
                 thumb=si.thumbnailUrl), showInfo = si))
         else:
             showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName), showInfo = None, showUrl =
-                showUrl))
+                showUrl, showName = showName))
             
     return showsList
  

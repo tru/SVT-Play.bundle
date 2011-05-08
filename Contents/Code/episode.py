@@ -4,17 +4,18 @@ from common import *
 
 class EpisodeInfo:
     def __init__(self):
+        self.title = None
         self.episodeUrl = None
         self.thumbNailUrl = None
         self.info = None
         self.length = 0
         self.qualities = dict()
 
-def GetShowEpisodes(sender, showInfo, showUrl = None): 
-    epList = []
+def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
     if(showUrl == None):
         Log("GetShowEpisodes: %s, %s" %  (showInfo.name, showInfo.url))
         showUrl = showInfo.url
+        showName = showInfo.name
     else:
         Log("GetShowEpisodes (no showInfo):")
 
@@ -23,19 +24,30 @@ def GetShowEpisodes(sender, showInfo, showUrl = None):
     for page in pages:
         epUrls = epUrls + GetEpisodeUrlsFromPage(page)
 
+    epList = MediaContainer(title1=showName)
     for epUrl in epUrls:
         Log("EPURL: %s" % epUrl)
-        GetEpisodeInfo(epUrl)
+        epInfo = GetEpisodeInfo(epUrl)
+        contentUrl = GetContentUrlFromUserQualSettings(epInfo)
+        epList.Append(VideoItem(key=contentUrl, title=epInfo.title, summary=epInfo.info, duration=epInfo.length,
+            thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl))
 
     return epList
+
+def GetContentUrlFromUserQualSettings(epInfo):
+    Log("DICTIONARY: %s" % epInfo.qualities)
+    url = epInfo.qualities[Prefs['quality']]
+    Log("SELECTED CONTENT URL: %s" % url)
+    return url
 
 def GetEpisodeUrlsFromPage(url):
     epUrls = []
     pageElement = HTML.ElementFromURL(url)
     xpathbase = TAG_DIV_ID % "sb"
-    episodeElements = pageElement.xpath(xpathbase + "//a[starts-with(@href,'/v/')]")
+    episodeElements = pageElement.xpath(xpathbase + "//a[starts-with(@href,'/v/')]/@href")
+
     for epElem in episodeElements:
-        epUrl = URL_SITE + epElem.get("href")
+        epUrl = URL_SITE + epElem
         epUrls.append(epUrl)
 
     return epUrls
@@ -48,14 +60,17 @@ def GetEpisodeInfo(episodeUrl):
     episodeImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
     Log("Episode thumbnail: %s " % episodeImageUrl)
 
+    episodeTitle = pageElement.xpath("//meta[@property='og:title']/@content")[0]
+    episodeTitle = string.split(episodeTitle, "|")[0]
+
     infoElements = pageElement.xpath("//div[@id='description-episode']")
     episodeInfo = TEXT_NO_INFO
     if (len(infoElements) > 0):
         episodeInfo = infoElements[0].text.strip()
 
-    moreInfoUrl = pageElement.xpath("//div[@class='info']//li[@class='episode']//a[starts-with(@href, '/popup')]") 
+    moreInfoUrl = infoElements[0].xpath("../a[@class='plus']/@href")
     if(len(moreInfoUrl) > 0):
-        infoUrl = URL_SITE + moreInfoUrl[0].get("href")
+        infoUrl = URL_SITE + moreInfoUrl[0]
         Log("MerInfoURL: %s " % infoUrl)
         infoElement = HTML.ElementFromURL(infoUrl)
         infoTexts = infoElement.xpath("//div[@id='wrapper']//p//text()")
@@ -63,7 +78,7 @@ def GetEpisodeInfo(episodeUrl):
             episodeInfo = infoTexts[0]
             Log(episodeInfo)
 
-    episodeLengthMillis=""    
+    episodeLengthMillis = 0    
     lengthElements = pageElement.xpath(u"//div[@class='info']//span[contains(text(), 'Längd:')]")
     if (len(lengthElements) > 0):
         lengthText = lengthElements[0].tail.strip()
@@ -80,14 +95,43 @@ def GetEpisodeInfo(episodeUrl):
             seconds = int(secondsMatch.group(1))
 
         Log("Episode length: %s %s %s" % (hours, minutes, seconds))
-        episodeLengthMillis = "%d" % (1000 * (hours*60*60 + minutes*60 + seconds))
+        episodeLengthMillis =  (1000 * (hours*60*60 + minutes*60 + seconds))
 
     # Get the url for the stream
-    contentUrl = GetContentUrl(pageElement)
-    #Log("Content url:" + contentUrl)
-    #return (episodeInfo, episodeLengthMillis, contentUrl)
+    contentUrls = GetContentUrls(pageElement)
 
-def GetContentUrl(pageElement):
+    #TODO
+    #Get HIRES ep image from the flashvars string
+
+    hiresImage = GetHiResThumbNail(pageElement)
+    if(hiresImage != None):
+        episodeImageUrl = hiresImage
+
+    epInfo = EpisodeInfo()
+    epInfo.title = episodeTitle
+    epInfo.episodeUrl = episodeUrl
+    epInfo.thumbNailUrl = episodeImageUrl 
+    epInfo.info = episodeInfo 
+    epInfo.length = episodeLengthMillis 
+    epInfo.qualities = contentUrls
+
+    return epInfo 
+
+def GetHiResThumbNail(pageElement):
+    imageTag = "background="
+    flashvars = pageElement.xpath("(//div[@class='video']//param[@name='flashvars'])[1]/@value") 
+    flashvars = flashvars[0]
+    index = string.find(flashvars, imageTag) 
+    index = index + len(imageTag)
+    indexAnd = string.find(flashvars, "&", index)
+    #Log("INDEXES %d, %d" % (index, indexAnd))
+    if(index > -1 and indexAnd > index):
+        bgimage = flashvars[index:indexAnd]
+        #Log("NEW BG IMAGE: %s" % bgimage)
+        return bgimage
+    return None
+
+def GetContentUrls(pageElement):
     flashvars = pageElement.xpath("(//div[@class='video']//param[@name='flashvars'])[1]/@value") 
     d = dict()
 
@@ -101,18 +145,45 @@ def GetContentUrl(pageElement):
                 SetQuality(url, d)
         Log("QualDict: %s" % d)
     
-    return dict()
+    SetHighestQuality(d)
+    return d
 
 def SetQuality(contentUrl, d):
     s = string.split(contentUrl, ',')
-    if(string.find(s[1], '2400')):
+    Log("SetQuality: %s " % s)
+    if(string.find(s[1], '2400') > -1):
         d[QUAL_T_HIGHEST] = s[0]
         d[QUAL_T_HD] = s[0]
-    elif(string.find(s[1], '1400')):
+    elif(string.find(s[1], '1400') > -1):
         d[QUAL_T_HIGH] = s[0]
-    elif(string.find(s[1], '850')):
+    elif(string.find(s[1], '850') > -1):
         d[QUAL_T_MED] = s[0]
     else:
         d[QUAL_T_LOW] = s[0]
 
+def SetHighestQuality(d):
+    try:
+        highest = d[QUAL_T_LOW]
+        d[QUAL_T_HIGHEST] = highest
+    except KeyError:
+        Log("No low quality")
+    try:
+        highest = d[QUAL_T_MED]
+        d[QUAL_T_HIGHEST] = highest
+    except KeyError:
+        Log("No med quality")
+    
+    try:
+        highest = d[QUAL_T_HIGH]
+        d[QUAL_T_HIGHEST] = highest
+    except KeyError:
+        Log("No high quality")
 
+    try:
+        highest = d[QUAL_T_HD]
+        d[QUAL_T_HIGHEST] = highest
+    except KeyError:
+        Log("No hd  quality")
+
+
+        
