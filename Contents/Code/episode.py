@@ -47,7 +47,7 @@ def GetContentUrlFromUserQualSettings(epInfo):
     try:
         url = epInfo.qualities[Prefs['quality']]
     except KeyError:
-        url = ""
+        url = epInfo.qualities[QUAL_T_HIGHEST]
 
     if(string.find(url, "rtmp") > -1):
         if (url.endswith('.mp4')):

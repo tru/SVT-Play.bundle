@@ -15,7 +15,7 @@ def Start():
     MediaContainer.art = R(ART)
     
     #Create thread to reindex shows in the background
-    #Thread.Create(ReindexShows, MAX_PAGINATE_PAGES)
+    Thread.Create(ReindexShows, MAX_PAGINATE_PAGES)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods

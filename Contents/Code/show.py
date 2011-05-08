@@ -10,7 +10,7 @@ class ShowInfo:
         self.name = None
         self.info = None
         self.url = None
-        self.episodes = []
+        #self.episodes = []
 
 
 def ReindexShows(maxPaginatePages = 100):
@@ -33,7 +33,8 @@ def GetIndexShows(sender):
             Log("subtitle: %s" % si.info)
             Log("thumbnail: %s " % si.thumbNailUrl)
             showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName, summary=si.info,
-                thumb=si.thumbnailUrl), showInfo = si))
+                thumb=si.thumbNailUrl), showInfo = si))
+            Log("DONE")
         else:
             showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName), showInfo = None, showUrl =
                 showUrl, showName = showName))
@@ -87,9 +88,9 @@ def GetShowInfo(showUrl):
     Log(showImageUrl)
     HTTP.Request(showImageUrl, cacheTime=60)
     si = ShowInfo()
-    si.name = showName
+    si.name = str(showName)
     si.info = showInfo
-    si.thumbnailUrl = showImageUrl
+    si.thumbNailUrl = showImageUrl
     si.url = showUrl
     if(len(showName) > 0):
         Log("Saving data for: %s " % showName)
