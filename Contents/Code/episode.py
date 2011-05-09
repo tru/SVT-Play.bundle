@@ -12,6 +12,18 @@ class EpisodeInfo:
         self.qualities = dict()
         self.flashArgs = dict()
         self.isLive = False
+    def GetContentUrl(self):
+        return GetContentUrlFromUserQualSettings(self)
+
+    def GetMediaItem(self):
+        contentUrl = self.GetContentUrl()
+        if(contentUrl.endswith('.flv')):
+            item = VideoItem(key=contentUrl, title=self.title, summary=self.info, duration=self.length,
+                thumb=self.thumbNailUrl, art=self.thumbNailUrl)
+        else:
+            item = Function(VideoItem(key=PlayVideo, title=self.title, summary=self.info,
+                duration=self.length, thumb=self.thumbNailUrl, art=self.thumbNailUrl), url=contentUrl)
+        return item
 
 def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
     if(showUrl == None):
@@ -30,14 +42,7 @@ def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
     for epUrl in epUrls:
         #Log("EPURL: %s" % epUrl)
         epInfo = GetEpisodeInfo(epUrl)
-        contentUrl = GetContentUrlFromUserQualSettings(epInfo)
-        if(contentUrl.endswith('.flv')):
-            epList.Append(VideoItem(key=contentUrl, title=epInfo.title, summary=epInfo.info, duration=epInfo.length,
-                thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl))
-        else:
-            epList.Append(Function(VideoItem(key=PlayVideo, title=epInfo.title, summary=epInfo.info,
-                duration=epInfo.length, thumb=epInfo.thumbNailUrl, art=epInfo.thumbNailUrl), url=contentUrl))
-
+        epList.Append(epInfo.GetMediaItem())
     return epList
 
 def PlayVideo(sender, url):
