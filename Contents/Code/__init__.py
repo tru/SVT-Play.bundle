@@ -27,7 +27,7 @@ def MainMenu():
     menu = MediaContainer(viewGroup="List", title1= TEXT_TITLE + " " + VERSION)
     menu.Append(Function(DirectoryItem(GetIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
     menu.Append(Function(DirectoryItem(ListLiveMenu, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
-    menu.Append(PrefsItem(title=TEXT_PREFERENCES))
+    menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
     return menu
 
 def ListLiveMenu(sender):
