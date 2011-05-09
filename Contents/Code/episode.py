@@ -10,6 +10,8 @@ class EpisodeInfo:
         self.info = None
         self.length = 0
         self.qualities = dict()
+        self.flashArgs = dict()
+        self.isLive = False
 
 def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
     if(showUrl == None):
@@ -56,6 +58,10 @@ def GetContentUrlFromUserQualSettings(epInfo):
         else:
             url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=")
 
+    if(epInfo.isLive):
+        url = re.sub(r'^(.*)/(.*)$','\\1&clip=\\2', url)
+        url = url +"&live=true&width=640&height=360"
+
     return url
 
 def GetEpisodeUrlsFromPage(url):
@@ -72,11 +78,10 @@ def GetEpisodeUrlsFromPage(url):
 
 def GetEpisodeInfo(episodeUrl):
     Log(episodeUrl)
+    epInfo = EpisodeInfo()
 
     pageElement = HTML.ElementFromURL(episodeUrl, cacheTime = CACHE_TIME_EPISODE)
-
-    episodeImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
-    #Log("Episode thumbnail: %s " % episodeImageUrl)
+    (contentUrls, flashArgs) = GetContentUrls(pageElement)
 
     episodeTitle = pageElement.xpath("//meta[@property='og:title']/@content")[0]
     episodeTitle = string.split(episodeTitle, "|")[0]
@@ -97,39 +102,39 @@ def GetEpisodeInfo(episodeUrl):
             episodeInfo = infoTexts[0]
             Log(episodeInfo)
 
-    episodeLengthMillis = 0    
-    lengthElements = pageElement.xpath(u"//div[@class='info']//span[contains(text(), 'Längd:')]")
-    if (len(lengthElements) > 0):
-        lengthText = lengthElements[0].tail.strip()
-        (hours, minutes, seconds) = [0,0,0]
-        hoursMatch = re.search(r'(\d+) tim',lengthText)
-        minutesMatch = re.search(r'(\d+) min',lengthText)
-        secondsMatch = re.search(r'(\d+) sek',lengthText)
+    try:
+        epLength = flashArgs['length']
+        if(len(epLength) > 0):
+            epLength = int(epLength)
+        else:
+            epLength = 0
+        #Log("New Length millis: %d" % (int(epLength) * 1000))
+        epLength = epLength * 1000
+    except KeyError:
+        Log("No length found :(")
 
-        if (hoursMatch):
-            hours = int(hoursMatch.group(1))
-        if (minutesMatch):
-            minutes = int(minutesMatch.group(1))
-        if (secondsMatch):
-            seconds = int(secondsMatch.group(1))
-
-        #Log("Episode length: %s %s %s" % (hours, minutes, seconds))
-        episodeLengthMillis =  (1000 * (hours*60*60 + minutes*60 + seconds))
-
-    contentUrls = GetContentUrls(pageElement)
+    try:
+        if(len(flashArgs['liveStart']) > 0):
+            epInfo.isLive = True
+            episodeTitle = TEXT_LIVE + episodeTitle
+            #Log("IS LIVE")
+    except KeyError:
+        Log('liveStart not found')
 
     hiresImage = GetHiResThumbNail(pageElement)
     if(hiresImage != None):
         episodeImageUrl = hiresImage
+    else:
+        episodeImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
     HTTP.PreCache(episodeImageUrl, cacheTime = CACHE_TIME_EPISODE)
 
-    epInfo = EpisodeInfo()
     epInfo.title = episodeTitle
     epInfo.episodeUrl = episodeUrl
     epInfo.thumbNailUrl = episodeImageUrl 
     epInfo.info = episodeInfo 
-    epInfo.length = episodeLengthMillis 
+    epInfo.length = epLength 
     epInfo.qualities = contentUrls
+    epInfo.flashArgs = flashArgs
 
     return epInfo 
 
@@ -181,8 +186,9 @@ def GetContentUrls(pageElement):
                d[QUAL_T_HIGH] = url 
                d[QUAL_T_MED] = url 
                d[QUAL_T_LOW] = url 
-    
-    return d
+
+    args = GetUrlArgs(flashvars) 
+    return (d, args)
 
 def SetQuality(contentUrl, d):
     s = string.split(contentUrl, ',')

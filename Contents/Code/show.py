@@ -63,6 +63,7 @@ def GetShowInfo(showUrl):
     showInfo = str(pageElement.xpath("//meta[@property='og:description']/@content")[0])
     title = str(pageElement.xpath("//meta[@property='og:title']/@content")[0])
     showName = string.strip(string.split(title, '|')[0])
+#TODO Get extended show info from popup
     #Log(showInfo)
     #Log(showUrl)
     #Log(showImageUrl)

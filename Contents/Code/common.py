@@ -22,6 +22,8 @@ TEXT_TITLE = u'SVT Play'
 TEXT_NO_INFO = u'Ingen information hittades'
 TEXT_PREFERENCES = u'Inställningar'
 
+TEXT_LIVE = u'LIVE: '
+
 #The page step function will only step this many pages deep. Can be changed / function call.
 MAX_PAGINATE_PAGES = 100
 
@@ -93,3 +95,17 @@ def GetPaginatePages(url, divId, paginateUrl = None):
     
     return paginatePages
 
+
+def GetUrlArgs(url):
+    args = string.split(url, '&')
+    d = dict()
+    for arg in args:
+        a = string.split(arg, '=')
+        if(len(a) > 1):
+           d[a[0]] = a[1]
+    return d
+
+# Replaces all running whitespace characters with a single space
+def strip_all(str):
+    return string.join(string.split(str), ' ')
+ 
