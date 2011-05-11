@@ -32,7 +32,8 @@ THUMB = 'icon-default.png'
 
 CACHE_TIME_LONG    = 60*60*24*30 # Thirty days
 CACHE_TIME_SHORT   = 60*10    # 10  minutes
-CACHE_TIME_SHOW = CACHE_TIME_SHORT
+CACHE_TIME_1DAY    = 60*60*24
+CACHE_TIME_SHOW = CACHE_TIME_1DAY
 CACHE_TIME_EPISODE = CACHE_TIME_LONG
 
 #Quality shorts...
@@ -114,5 +115,14 @@ class MoreInfoPopup:
     def __init__(self, pageElement):
         self.pageElement = pageElement
         self.xbasepath = "//div[@id='wrapper']//p[%d]/text()"
-        self.episodeInfo = pageElement.xpath(self.xbasepath % 1)[0]
-        self.showInfo = pageElement.xpath(self.xbasepath % 2)[0]
+    def EpisodeInfo(self):
+        episodeInfo = self.pageElement.xpath(self.xbasepath % 1)
+        if(len(episodeInfo) > 0):
+            return episodeInfo[0]
+        return None
+
+    def ShowInfo(self):
+        showInfo = self.pageElement.xpath(self.xbasepath % 2)
+        if(len(showInfo) > 0):
+            return showInfo[0]
+        return None

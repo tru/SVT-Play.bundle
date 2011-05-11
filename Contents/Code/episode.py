@@ -101,10 +101,11 @@ def GetEpisodeInfo(episodeUrl):
     if(len(moreInfoUrl) > 0):
         infoUrl = URL_SITE + moreInfoUrl[0]
         Log("moreInfoUrl: %s " % infoUrl)
-        infoElement = HTML.ElementFromURL(infoUrl)
-        infoText = MoreInfoPopup(infoElement).episodeInfo
+        infoElement = HTML.ElementFromURL(infoUrl, cacheTime=CACHE_TIME_EPISODE)
+        infoText = MoreInfoPopup(infoElement).EpisodeInfo()
         Log("episodeInfo: %s" % infoText)
-        episodeInfo = infoText
+        if(infoText != None):
+            episodeInfo = infoText
 
     try:
         epLength = flashArgs['length']

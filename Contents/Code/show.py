@@ -59,21 +59,23 @@ def FindAllShows(pageElement):
 
 def GetShowInfo(showUrl):
     Log("Getting showinfo from: %s " % showUrl)
-    pageElement = HTML.ElementFromURL(showUrl, cacheTime = CACHE_TIME_SHORT)
+    pageElement = HTML.ElementFromURL(showUrl, cacheTime = CACHE_TIME_1DAY)
     showImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
     showInfo = str(pageElement.xpath("//meta[@property='og:description']/@content")[0])
     title = str(pageElement.xpath("//meta[@property='og:title']/@content")[0])
     showName = string.strip(string.split(title, '|')[0])
-#TODO Get extended show info from popup
-    moreInfoUrl = "//div[@class='info']//li[@class='title']/a/@href" 
+    
+    moreInfoUrl = pageElement.xpath("//div[@class='info']//li[@class='title']/a/@href")
     if(len(moreInfoUrl)):
-        showInfo = MoreInfoPopup(HTML.ElementFromURL(URL_SITE + moreInfoUrl)).showInfo
+        extShowInfo = MoreInfoPopup(HTML.ElementFromURL(URL_SITE + moreInfoUrl[0], cacheTime = CACHE_TIME_1DAY)).ShowInfo()
+        if(extShowInfo != None):
+            showInfo = str(extShowInfo)
     Log(showInfo)
-    #Log(showUrl)
-    #Log(showImageUrl)
+
+
     si = ShowInfo()
     try:
-        image = HTTP.Request(showImageUrl, cacheTime=CACHE_TIME_SHORT).content
+        image = HTTP.Request(showImageUrl, cacheTime=CACHE_TIME_1DAY).content
         imageName = showName + ".image"
         Log("imageName: %s" % imageName)
         Log("image: %s" % image)
