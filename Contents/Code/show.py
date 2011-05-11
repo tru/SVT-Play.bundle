@@ -59,18 +59,21 @@ def FindAllShows(pageElement):
 
 def GetShowInfo(showUrl):
     Log("Getting showinfo from: %s " % showUrl)
-    pageElement = HTML.ElementFromURL(showUrl, cacheTime = CACHE_TIME_LONG)
+    pageElement = HTML.ElementFromURL(showUrl, cacheTime = CACHE_TIME_SHORT)
     showImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
     showInfo = str(pageElement.xpath("//meta[@property='og:description']/@content")[0])
     title = str(pageElement.xpath("//meta[@property='og:title']/@content")[0])
     showName = string.strip(string.split(title, '|')[0])
 #TODO Get extended show info from popup
-    #Log(showInfo)
+    moreInfoUrl = "//div[@class='info']//li[@class='title']/a/@href" 
+    if(len(moreInfoUrl)):
+        showInfo = MoreInfoPopup(HTML.ElementFromURL(URL_SITE + moreInfoUrl)).showInfo
+    Log(showInfo)
     #Log(showUrl)
     #Log(showImageUrl)
     si = ShowInfo()
     try:
-        image = HTTP.Request(showImageUrl, cacheTime=CACHE_TIME_LONG).content
+        image = HTTP.Request(showImageUrl, cacheTime=CACHE_TIME_SHORT).content
         imageName = showName + ".image"
         Log("imageName: %s" % imageName)
         Log("image: %s" % image)
@@ -102,7 +105,7 @@ def GetShowThumb(showInfo = None):
         pass
 
     try:
-        image = HTTP.Request(showInfo.thumbNailUrl).content
+        image = HTTP.Request(showInfo.thumbNailUrl, cacheTime=CACHE_TIME_SHORT).content
         return DataObject(image, "image/jpeg")
     except: 
         pass

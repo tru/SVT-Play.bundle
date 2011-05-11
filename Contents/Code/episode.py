@@ -96,17 +96,15 @@ def GetEpisodeInfo(episodeUrl):
     moreInfoUrl = ""
     if (len(infoElements) > 0):
         episodeInfo = infoElements[0].text.strip()
-        moreInfoUrl = infoElements[0].xpath("../a[@class='plus']/@href")
-
+    
+    moreInfoUrl = pageElement.xpath("//div[@class='info']//li[@class='episode']/a/@href")
     if(len(moreInfoUrl) > 0):
         infoUrl = URL_SITE + moreInfoUrl[0]
-        #Log("moreInfoUrl: %s " % infoUrl)
+        Log("moreInfoUrl: %s " % infoUrl)
         infoElement = HTML.ElementFromURL(infoUrl)
-        infoTexts = infoElement.xpath("//div[@id='wrapper']//p//text()")
-        if(len(infoTexts) > 0):
-            episodeInfo = infoTexts[0]
-            Log(episodeInfo)
-        infoTexts = MoreInfoPopup(infoElement).episodeInfo
+        infoText = MoreInfoPopup(infoElement).episodeInfo
+        Log("episodeInfo: %s" % infoText)
+        episodeInfo = infoText
 
     try:
         epLength = flashArgs['length']

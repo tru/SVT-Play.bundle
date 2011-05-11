@@ -113,6 +113,6 @@ def strip_all(str):
 class MoreInfoPopup:
     def __init__(self, pageElement):
         self.pageElement = pageElement
-        self.xbasepath = "//div[@id='wrapper']//p[%d]" 
-        self.episodeInfo = pageElement.xpath(self.xbasepath % 1)
-        self.showInfo = pageElement.xpath(self.xbasepath % 2)
+        self.xbasepath = "//div[@id='wrapper']//p[%d]/text()"
+        self.episodeInfo = pageElement.xpath(self.xbasepath % 1)[0]
+        self.showInfo = pageElement.xpath(self.xbasepath % 2)[0]
