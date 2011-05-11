@@ -11,6 +11,7 @@ from episode import *
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 def Start():
     Plugin.AddPrefixHandler(PLUGIN_PREFIX, MainMenu, TEXT_TITLE, "icon-default.png", "art-default.jpg")
+    Plugin.AddViewGroup(name="List")
     HTTP.CacheTime = CACHE_TIME_SHORT
     HTTP.PreCache(URL_INDEX)
     MediaContainer.art = R(ART)
@@ -27,8 +28,12 @@ def MainMenu():
     menu = MediaContainer(viewGroup="List", title1= TEXT_TITLE + " " + VERSION)
     menu.Append(Function(DirectoryItem(GetIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
     #menu.Append(Function(DirectoryItem(ListLiveMenu2, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
+    menu.Append(Function(DirectoryItem(key=Restart, title="Restart")))
     menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
     return menu
+
+def Restart(sender):
+    Plugin.Restart()
 
 def ListLiveMenu2(sender):
     liveList = MediaContainer()
