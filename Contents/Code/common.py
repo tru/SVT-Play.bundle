@@ -28,6 +28,7 @@ TEXT_LIVE = u'LIVE: '
 MAX_PAGINATE_PAGES = 100
 
 ART = "art-default.jpg"
+THUMB = 'icon-default.png'
 
 CACHE_TIME_LONG    = 60*60*24*30 # Thirty days
 CACHE_TIME_SHORT   = 60*10    # 10  minutes
@@ -109,3 +110,9 @@ def GetUrlArgs(url):
 def strip_all(str):
     return string.join(string.split(str), ' ')
  
+class MoreInfoPopup:
+    def __init__(self, pageElement):
+        self.pageElement = pageElement
+        self.xbasepath = "//div[@id='wrapper']//p[%d]" 
+        self.episodeInfo = pageElement.xpath(self.xbasepath % 1)
+        self.showInfo = pageElement.xpath(self.xbasepath % 2)

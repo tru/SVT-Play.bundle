@@ -106,6 +106,7 @@ def GetEpisodeInfo(episodeUrl):
         if(len(infoTexts) > 0):
             episodeInfo = infoTexts[0]
             Log(episodeInfo)
+        infoTexts = MoreInfoPopup(infoElement).episodeInfo
 
     try:
         epLength = flashArgs['length']

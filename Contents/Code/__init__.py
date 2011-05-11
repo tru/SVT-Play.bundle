@@ -18,7 +18,7 @@ def Start():
     cerealizer.register(ShowInfo)
     cerealizer.register(EpisodeInfo)
 
-    #Thread.Create(ReindexShows)
+    Thread.Create(ReindexShows)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods
@@ -35,8 +35,12 @@ def ListLiveMenu2(sender):
     pageElement = HTML.ElementFromURL(URL_LIVE)
     activeLinks = pageElement.xpath("//span[@class='description']/a/@href")
     for link in activeLinks:
-        Log("Link: %s " % link)
+        newLink = URL_SITE + link
+        Log("Link: %s " % newLink)
+        epInfo = GetEpisodeInfo(newLink)
+        liveList.Append(epInfo.GetMediaItem())
 
+    return liveList
 
 def ListLiveMenu(sender):
     showsList = MediaContainer()

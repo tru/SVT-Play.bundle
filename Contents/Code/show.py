@@ -7,6 +7,7 @@ from common import *
 class ShowInfo:
     def __init__(self):
         self.thumbNailUrl = None
+        self.thumbFileName = None
         self.name = None
         self.info = None
         self.url = None
@@ -39,11 +40,11 @@ def GetIndexShows(sender):
             #Log("subtitle: %s" % si.info)
             #Log("thumbnail: %s " % si.thumbNailUrl)
             showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName, summary=si.info,
-                thumb=si.thumbNailUrl), showInfo = si))
+                thumb=Function(GetShowThumb, showInfo=si)), showInfo = si))
             #Log("DONE")
         else:
-            showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName), showInfo = None, showUrl =
-                showUrl, showName = showName))
+            showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName, thumb=Function(GetShowThumb,
+                showInfo=None)), showInfo = None, showUrl = showUrl, showName = showName))
             
     return showsList
 
@@ -67,8 +68,18 @@ def GetShowInfo(showUrl):
     #Log(showInfo)
     #Log(showUrl)
     #Log(showImageUrl)
-    HTTP.Request(showImageUrl, cacheTime=CACHE_TIME_LONG)
     si = ShowInfo()
+    try:
+        image = HTTP.Request(showImageUrl, cacheTime=CACHE_TIME_LONG).content
+        imageName = showName + ".image"
+        Log("imageName: %s" % imageName)
+        Log("image: %s" % image)
+        Data.SaveObject(imageName, image)
+        si.thumbFileName = imageName
+    except:
+        si.thumbFileName = ""
+       
+
     si.name = str(showName)
     si.info = showInfo
     si.thumbNailUrl = showImageUrl
@@ -76,3 +87,25 @@ def GetShowInfo(showUrl):
 
     if(len(showName) > 0):
         Data.SaveObject(showName, si) 
+
+def GetShowThumb(showInfo = None):
+    if(showInfo == None):
+        return Redirect(R(THUMB))
+
+    try:
+        if(Data.Exists(showInfo.thumbFileName)):
+            Log("Found image: %s" % showInfo.thumbFileName)
+            image = Data.LoadObject(showInfo.thumbFileName)
+            return DataObject(image, "image/jpeg")
+    except:
+        Log("Could not get image for %s (imageName:%s)" % (showInfo.name, showInfo.thumbFileName))
+        pass
+
+    try:
+        image = HTTP.Request(showInfo.thumbNailUrl).content
+        return DataObject(image, "image/jpeg")
+    except: 
+        pass
+
+    return Redirect(R(THUMB))
+
