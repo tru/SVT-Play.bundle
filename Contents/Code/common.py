@@ -5,7 +5,7 @@
 VERSION="3.1"
 PLUGIN_PREFIX	= "/video/svt"
 
-PLEX_CLIP_PLAYER_URL = "http://www.plexapp.com/player/player.php?clip="
+#PLEX_CLIP_PLAYER_URL = "http://www.plexapp.com/player/player.php?clip="
 
 #URLs
 URL_SITE = "http://svtplay.se"
@@ -25,7 +25,7 @@ TEXT_PREFERENCES = u'Inställningar'
 TEXT_LIVE = u'LIVE: '
 
 #The page step function will only step this many pages deep. Can be changed / function call.
-MAX_PAGINATE_PAGES = 100
+MAX_PAGINATE_PAGES = 50
 
 ART = "art-default.jpg"
 THUMB = 'icon-default.png'
@@ -51,6 +51,7 @@ QUAL_T_LOW = u"Låg"
 
 #Prefs settings
 PREF_QUALITY = 'quality'
+PREF_PAGINATE_DEPTH = 'paginate_depth'
 
 #random stuff
 TAG_DIV_ID = "//div[@id='%s']" 
@@ -85,6 +86,7 @@ def GetPaginatePages(url, divId, paginateUrl = None):
     linkPages = len(paginationLinks)
     if(linkPages > 0): 
         stop = int(paginationLinks[linkPages-1].text)
+        stop = min(stop, MAX_PAGINATE_PAGES)
     else:
         stop = 1
 

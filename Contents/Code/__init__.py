@@ -37,6 +37,16 @@ def MainMenu():
 def PluginRestart(sender):
     Restart()
 
+def ValidatePrefs():
+    Log("Validate prefs")
+    global MAX_PAGINATE_PAGES
+    try:
+         MAX_PAGINATE_PAGES = int(Prefs[PREF_PAGINATE_DEPTH])
+    except ValueError:
+        pass
+
+    Log("max paginate %d" % MAX_PAGINATE_PAGES)
+
 def ListLiveMenu2(sender):
     liveList = MediaContainer()
     pageElement = HTML.ElementFromURL(URL_LIVE)
