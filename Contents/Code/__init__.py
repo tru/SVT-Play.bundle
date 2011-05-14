@@ -29,13 +29,13 @@ def Start():
 def MainMenu():
     menu = MediaContainer(viewGroup="List", title1= TEXT_TITLE + " " + VERSION)
     menu.Append(Function(DirectoryItem(GetIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
+    menu.Append(Function(DirectoryItem(GetRecommendedShows, title=TEXT_RECOMMENDED_SHOWS,
+        thumb=R('main_rekommenderat.png'))))
     #menu.Append(Function(DirectoryItem(ListLiveMenu2, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
-    menu.Append(Function(DirectoryItem(key=PluginRestart, title="Restart")))
     menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
     return menu
 
-def PluginRestart(sender):
-    Restart()
+   
 
 def ValidatePrefs():
     Log("Validate prefs")
@@ -82,49 +82,3 @@ def ListLiveMenu(sender):
         
     return showsList 
 
-# Main method for sucking out svtplay content
-def BuildGenericMenu(url, divId):
-    menuItems = []
-    pageElement = HTML.ElementFromURL(url)
-    Log("url: %s divId: %s" % (url, divId))
-    xpathBase = "//div[@id='%s']" % (divId)
-    Log("xpath expr: " + xpathBase)
-
-    clipLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/v/')]")
-    for clipLink in clipLinks:
-        clipName = clipLink.xpath("span/text()")[0].strip()
-        Log("Clip : %s" % (clipName.encode('utf8')))
-        clipUrl = SITE_URL + clipLink.get("href")
-        Log("URL: " + clipUrl)
-        clipIcon = clipLink.xpath("img")[0].get("src").replace("_thumb","_start")
-        Log("Clip icon: >" + clipIcon + "<")
-        (clipSummary, clipLength, contentUrl) = GetEpisodeInfo(clipUrl) 
-        if (contentUrl.endswith('.flv')):
-            v = VideoItem(key=contentUrl, title=clipName, summary=clipSummary, duration=clipLength,thumb=clipIcon)
-            menuItems.append(v)
-        else:
-            # should be rtmp url
-            if (contentUrl.endswith('.mp4')):
-               #special case rmpte stream with mp4 ending.
-               contentUrl = PLEX_PLAYER_URL + contentUrl.replace("_definst_/","_definst_&clip=mp4:")
-            else:
-                contentUrl = PLEX_PLAYER_URL + contentUrl.replace("_definst_/","_definst_&clip=")
-            menuItems.append(Function(VideoItem(PlayVideo, clipName, summary=clipSummary, thumb=clipIcon, duration=clipLength), url=contentUrl))
-        
-    # Note: must have "span" element, otherwise some wierd stuff can come along...
-    programLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href, '/t/')]/span/..")
-    for programLink in programLinks:
-        programName = programLink.xpath("span/text()")[0].strip()
-        Log("Program : %s" % (programName.encode('utf8')))
-        programUrl = SITE_URL + programLink.get("href")
-        programIcon = programLink.xpath("img")[0].get("src") #GetHiResIconFromSubPage(programUrl)
-        programSummary = GetProgramInfo(programUrl)
-        menuItems.append(Function(DirectoryItem(ListShowEpisodes, programName, summary=programSummary, thumb=programIcon), showName = programName, showUrl = programUrl))
-
-    # Subcategories (used in "Bolibompa" and maybe more)
-    subCategoryLinks = pageElement.xpath(xpathBase + "//a[@class='folder overlay tooltip']/span/..")
-    for subCategoryLink in subCategoryLinks:
-        subCategoryName = subCategoryLink.xpath("span/text()")[0].strip()
-        subCategoryUrl = url + subCategoryLink.get("href")
-        subCategoryImage = subCategoryLink.xpath("img[@class='folder-thumb']")[0].get("src")
-        menuItems.append(Function(DirectoryItem(key=HierarchyDown, title=subCategoryName, thumb=subCategoryImage), url=subCategoryUrl, baseUrl=url, divId = divId))

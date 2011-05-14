@@ -5,8 +5,6 @@
 VERSION="3.1"
 PLUGIN_PREFIX	= "/video/svt"
 
-#PLEX_CLIP_PLAYER_URL = "http://www.plexapp.com/player/player.php?clip="
-
 #URLs
 URL_SITE = "http://svtplay.se"
 URL_INDEX = URL_SITE + "/alfabetisk"
@@ -14,6 +12,7 @@ URL_INDEX_THUMB_PAGINATE = "?am,,%d,thumbs"
 URL_INDEX_THUMB = URL_INDEX + URL_INDEX_THUMB_PAGINATE
 URL_PLEX_PLAYER = "http://www.plexapp.com/player/player.php?&url="
 URL_LIVE = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
+URL_RECOMMENDED_SHOWS = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1364142,1,f,"
 
 #Texts
 TEXT_LIVE_SHOWS = u'Livesändningar'
@@ -21,6 +20,7 @@ TEXT_INDEX_SHOWS = u'Program A-Ö'
 TEXT_TITLE = u'SVT Play'
 TEXT_NO_INFO = u'Ingen information hittades'
 TEXT_PREFERENCES = u'Inställningar'
+TEXT_RECOMMENDED_SHOWS = u'Rekommenderat'
 
 TEXT_LIVE = u'LIVE: '
 
