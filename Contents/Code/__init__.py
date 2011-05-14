@@ -6,6 +6,7 @@ import cerealizer
 from show import *
 from common import *
 from episode import *
+from category import *
 
 # Initializer called by the framework
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -18,8 +19,9 @@ def Start():
 
     cerealizer.register(ShowInfo)
     cerealizer.register(EpisodeInfo)
+    cerealizer.register(CategoryInfo)
 
-    Thread.Create(ReindexShows)
+    #Thread.Create(ReindexShows)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods
@@ -28,12 +30,12 @@ def MainMenu():
     menu = MediaContainer(viewGroup="List", title1= TEXT_TITLE + " " + VERSION)
     menu.Append(Function(DirectoryItem(GetIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
     #menu.Append(Function(DirectoryItem(ListLiveMenu2, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
-    menu.Append(Function(DirectoryItem(key=Restart, title="Restart")))
+    menu.Append(Function(DirectoryItem(key=PluginRestart, title="Restart")))
     menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
     return menu
 
-def Restart(sender):
-    Plugin.Restart()
+def PluginRestart(sender):
+    Restart()
 
 def ListLiveMenu2(sender):
     liveList = MediaContainer()
@@ -116,20 +118,3 @@ def BuildGenericMenu(url, divId):
         subCategoryUrl = url + subCategoryLink.get("href")
         subCategoryImage = subCategoryLink.xpath("img[@class='folder-thumb']")[0].get("src")
         menuItems.append(Function(DirectoryItem(key=HierarchyDown, title=subCategoryName, thumb=subCategoryImage), url=subCategoryUrl, baseUrl=url, divId = divId))
-
-    return menuItems
-    
-def PlayVideo(sender, url):
-    Log("Request to play video: %s" % url)
-    return Redirect(WebVideoItem(url))
-
-
-def HierarchyDown(sender, url, baseUrl, divId):
-    Log("HD: %s" % url)
-    menu = MediaContainer()
-    paginateUrl = FindPaginateUrl(url)
-    paginateUrl = baseUrl + paginateUrl
-    menu.Extend(Paginate(paginateUrl % 1, paginateUrl, divId, BuildGenericMenu))
-
-    return menu
-

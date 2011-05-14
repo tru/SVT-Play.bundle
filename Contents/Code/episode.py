@@ -25,36 +25,15 @@ class EpisodeInfo:
                 duration=self.length, thumb=self.thumbNailUrl, art=self.thumbNailUrl), url=contentUrl)
         return item
 
-def GetShowEpisodes(sender, showInfo, showUrl = None, showName = None):
-    if(showUrl == None):
-        Log("GetShowEpisodes: %s, %s" %  (showInfo.name, showInfo.url))
-        showUrl = showInfo.url
-        showName = showInfo.name
-    else:
-        Log("GetShowEpisodes (no showInfo):")
-
-    pages = GetPaginatePages(showUrl, "sb")
-    epUrls = []
-    for page in pages:
-        epUrls = epUrls + GetEpisodeUrlsFromPage(page)
-
-    epList = MediaContainer(title1=showName)
-    for epUrl in epUrls:
-        #Log("EPURL: %s" % epUrl)
-        epInfo = GetEpisodeInfo(epUrl)
-        epList.Append(epInfo.GetMediaItem())
-    return epList
-
-def PlayVideo(sender, url):
-    Log("Request to play video: %s" % url)
-    return Redirect(WebVideoItem(url))
-
 
 def GetContentUrlFromUserQualSettings(epInfo):
+    url = None
     try:
+        url = epInfo.qualities[QUAL_T_HIGHEST]
         url = epInfo.qualities[Prefs['quality']]
     except KeyError:
-        url = epInfo.qualities[QUAL_T_HIGHEST]
+        if(url == None):
+            return ""
 
     if(string.find(url, "rtmp") > -1):
         if (url.endswith('.mp4')):

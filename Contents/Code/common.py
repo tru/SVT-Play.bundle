@@ -55,6 +55,10 @@ PREF_QUALITY = 'quality'
 #random stuff
 TAG_DIV_ID = "//div[@id='%s']" 
 
+def PlayVideo(sender, url):
+    Log("Request to play video: %s" % url)
+    return Redirect(WebVideoItem(url))
+    
 
 def FindPaginateUrl(url, divId):
     pageElement = HTML.ElementFromURL(url)

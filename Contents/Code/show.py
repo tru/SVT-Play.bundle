@@ -23,6 +23,13 @@ def ReindexShows():
     
     Log("Reindex complete")
 
+def FindAllShows(pageElement):
+   xpathBase = TAG_DIV_ID  % "am"
+   showLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href, '/t/')]/@href") 
+   Log("FindAllShows showLinkslen: %d" % len(showLinks))
+   for show in showLinks:
+        Log("info: %s " % show)
+        GetShowInfo(URL_SITE + show)
 
 def GetIndexShows(sender):
     Log("GetIndexShows")
@@ -39,22 +46,55 @@ def GetIndexShows(sender):
             #Log("SHOW: %s " % si.name)
             #Log("subtitle: %s" % si.info)
             #Log("thumbnail: %s " % si.thumbNailUrl)
-            showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName, summary=si.info,
+            showsList.Append(Function(DirectoryItem(key=GetShowContents,title=showName, summary=si.info,
                 thumb=Function(GetShowThumb, showInfo=si)), showInfo = si))
             #Log("DONE")
         else:
-            showsList.Append(Function(DirectoryItem(key=GetShowEpisodes,title=showName, thumb=Function(GetShowThumb,
+            showsList.Append(Function(DirectoryItem(key=GetShowContents,title=showName, thumb=Function(GetShowThumb,
                 showInfo=None)), showInfo = None, showUrl = showUrl, showName = showName))
             
     return showsList
 
-def FindAllShows(pageElement):
-   xpathBase = TAG_DIV_ID  % "am"
-   showLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href, '/t/')]/@href") 
-   Log("FindAllShows showLinkslen: %d" % len(showLinks))
-   for show in showLinks:
-        Log("info: %s " % show)
-        GetShowInfo(URL_SITE + show)
+def GetShowContents(sender, showInfo, showUrl = None, showName = None):
+    if(showUrl == None):
+        Log("GetShowContents: %s, %s" %  (showInfo.name, showInfo.url))
+        showUrl = showInfo.url
+        showName = showInfo.name
+    else:
+        Log("GetShowContents(no showInfo):")
+
+    list = MediaContainer(title1=showName)
+    list.Extend(GetShowCategories(showUrl))
+    list.Extend(GetShowEpisodes(showUrl))
+    
+    return list
+
+def GetShowCategories(showUrl=None):
+    pages = GetPaginatePages(showUrl, "sb")
+    catInfos = []
+    for page in pages:
+        catInfos = catInfos + GetCategoryInfosFromPage(page)
+
+    catItems = []
+
+    for catInfo in catInfos:
+        f = Function(DirectoryItem(key=GetCategoryContents, title=catInfo.name, thumb=catInfo.thumbUrl), ci=catInfo)
+        catItems.append(f)
+
+    return catItems
+
+def GetShowEpisodes(showUrl = None):
+    pages = GetPaginatePages(showUrl, "sb")
+    epUrls = []
+    for page in pages:
+        epUrls = epUrls + GetEpisodeUrlsFromPage(page)
+
+    epList = []
+    for epUrl in epUrls:
+        #Log("EPURL: %s" % epUrl)
+        epInfo = GetEpisodeInfo(epUrl)
+        epList.append(epInfo.GetMediaItem())
+    return epList
 
 
 def GetShowInfo(showUrl):
