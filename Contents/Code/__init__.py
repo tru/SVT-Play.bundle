@@ -39,7 +39,7 @@ def MainMenu():
    
 def GetLatestClips(sender):
     Log("GetLatestClips")
-    clipsList = MediaContainer(title1 = TEXT_LATEST_CLIPS)
+    clipsList = MediaContainer(title1 = sender.title1, title2 = TEXT_LATEST_CLIPS)
     clipsPages = GetPaginatePages(url=URL_LATEST_CLIPS, divId='cb', maxPaginateDepth = 5)
     clipLinks = []
     for page in clipsPages:

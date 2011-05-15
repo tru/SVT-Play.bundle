@@ -33,7 +33,7 @@ def FindAllShows(pageElement):
 
 def GetIndexShows(sender):
     Log("GetIndexShows")
-    showsList = MediaContainer(title1=TEXT_INDEX_SHOWS)
+    showsList = MediaContainer(title1 = sender.title1, title2=TEXT_INDEX_SHOWS)
     xpathBase = "//div[@class='tab active']"
     pageElement = HTML.ElementFromURL(URL_INDEX)
     programLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/t/')]")
@@ -44,7 +44,7 @@ def GetIndexShows(sender):
 
 def GetRecommendedShows(sender):
     Log("GetRecommendedShows")
-    showsList = MediaContainer(title1=TEXT_RECOMMENDED_SHOWS)
+    showsList = MediaContainer(title1 = sender.title1, title2=TEXT_RECOMMENDED_SHOWS)
     pages = GetPaginatePages(URL_RECOMMENDED_SHOWS, "pb")
     programLinks = []
     for page in pages:
@@ -92,7 +92,7 @@ def GetShowContents(sender, showInfo, showUrl = None, showName = None):
     else:
         Log("GetShowContents(no showInfo):")
 
-    list = MediaContainer(title1=sender.title1, title2=showName)
+    list = MediaContainer(title1=sender.title2, title2=showName)
     list.Extend(GetShowCategories(showUrl))
     list.Extend(GetShowEpisodes(showUrl))
 
