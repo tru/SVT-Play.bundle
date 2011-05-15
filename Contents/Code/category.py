@@ -22,7 +22,7 @@ class CategoryInfo:
 
        
 def GetCategoryContents(sender, ci):
-    list = MediaContainer(title1=ci.name)
+    list = MediaContainer(title1=sender.title2, title2=ci.name)
     list.Extend(ci.GetMediaItems())
     return list
 
