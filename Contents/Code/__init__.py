@@ -32,10 +32,19 @@ def MainMenu():
     menu.Append(Function(DirectoryItem(GetRecommendedShows, title=TEXT_RECOMMENDED_SHOWS,
         thumb=R('main_rekommenderat.png'))))
     menu.Append(Function(DirectoryItem(GetLatestClips, title=TEXT_LATEST_CLIPS, thumb=R('main_senaste_klipp.png'))))
+    menu.Append(Function(DirectoryItem(GetCategories, title=TEXT_CATEGORIES, thumb=R('main_kategori.png'))))
     #menu.Append(Function(DirectoryItem(ListLiveMenu2, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
     return menu
 
+
+def GetCategories(sender):
+    Log("GetCategories")
+    catMenu = MediaContainer(title1 = sender.title1, title2=TEXT_CATEGORIES)
+    catMenu.Append(Function(DirectoryItem(key=GetCategoryShows, title=TEXT_CAT_CHILD, thumb=R("category_barn.png")),
+        catUrl=URL_CAT_CHILD, catName=TEXT_CAT_CHILD))
+
+    return catMenu
    
 def GetLatestClips(sender):
     Log("GetLatestClips")

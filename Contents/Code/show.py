@@ -55,6 +55,21 @@ def GetRecommendedShows(sender):
     showsList.Extend(CreateShowList(programLinks, True))
     return showsList
 
+def GetCategoryShows(sender, catUrl, catName):
+    Log("GetCategoryShows %s" % catUrl)
+    catShows = MediaContainer(title1 = sender.title1, title2=catName)
+    pages = GetPaginatePages(catUrl, 'pb')
+    programLinks = []
+    for page in pages:
+        pageElement = HTML.ElementFromURL(page)
+        pLinks = pageElement.xpath("//div[@id='pb']//div[@class='content']//li/a[starts-with(@href, '/t/')]")
+        programLinks = programLinks + pLinks
+
+    catShows.Extend(CreateShowList(programLinks, True))
+    return catShows 
+
+
+
 def CreateShowList(programLinks, isRecommendedShows = False):
     showsList = []
     for programLink in programLinks:

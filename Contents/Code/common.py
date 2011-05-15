@@ -14,6 +14,8 @@ URL_PLEX_PLAYER = "http://www.plexapp.com/player/player.php?&url="
 URL_LIVE = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1596757,1,f,"
 URL_RECOMMENDED_SHOWS = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1364142,1,f,"
 URL_LATEST_CLIPS = "http://svtplay.se/?cb,a1364145,1,f,/pb,a1364142,1,f,-1"
+URL_CATEGORIES = "http://svtplay.se/kategorier"
+URL_CAT_CHILD = "http://svtplay.se/c/96251/barn"
 
 #Texts
 TEXT_LIVE_SHOWS = u'Livesändningar'
@@ -23,6 +25,8 @@ TEXT_NO_INFO = u'Ingen information hittades'
 TEXT_PREFERENCES = u'Inställningar'
 TEXT_RECOMMENDED_SHOWS = u'Rekommenderat'
 TEXT_LATEST_CLIPS = u'Senaste klipp'
+TEXT_CATEGORIES = u'Kategorier'
+TEXT_CAT_CHILD = u'Barn'
 
 TEXT_LIVE = u'LIVE: '
 
