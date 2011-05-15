@@ -72,7 +72,7 @@ def FindPaginateUrl(url, divId):
     paginateUrl =  string.join(p2, ',')
     return paginateUrl
 
-def GetPaginatePages(url, divId, paginateUrl = None):
+def GetPaginatePages(url, divId, paginateUrl = None, maxPaginateDepth = MAX_PAGINATE_PAGES):
     requestUrl = url
     if(paginateUrl == None):
         paginateUrl = FindPaginateUrl(url, divId)
@@ -86,7 +86,7 @@ def GetPaginatePages(url, divId, paginateUrl = None):
     linkPages = len(paginationLinks)
     if(linkPages > 0): 
         stop = int(paginationLinks[linkPages-1].text)
-        stop = min(stop, MAX_PAGINATE_PAGES)
+        stop = min(stop, maxPaginateDepth)
     else:
         stop = 1
 

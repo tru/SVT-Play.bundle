@@ -52,29 +52,34 @@ def GetRecommendedShows(sender):
         pLinks = pageElement.xpath("//div[@id='pb']//div[@class='content']//li/a[starts-with(@href, '/t/')]")
         programLinks = programLinks + pLinks
 
-    showsList.Extend(CreateShowList(programLinks))
+    showsList.Extend(CreateShowList(programLinks, True))
     return showsList
 
-def CreateShowList(programLinks):
+def CreateShowList(programLinks, isRecommendedShows = False):
     showsList = []
     for programLink in programLinks:
         showUrl = URL_SITE + programLink.get("href")
         showName = string.strip(programLink.xpath("text()")[0])
-        if(len(showName) < 1):
-            Log("testing secondary showname way")
+        secondaryThumbUrl = None
+        if(isRecommendedShows):
             showName = string.strip(programLink.xpath(".//span/text()")[0])
-        Log("Program Link: %s" % showName)
+            secondaryThumbUrl = programLink.xpath(".//img/@src")[0]
+            Log("Secondary thumb url: %s" % secondaryThumbUrl)
+        
+        Log("Program name: %s" % showName)
         if(Data.Exists(showName)):
             si = Data.LoadObject(showName)
-            #Log("SHOW: %s " % si.name)
+            Log("Using stored data for: %s " % si.name)
             #Log("subtitle: %s" % si.info)
             #Log("thumbnail: %s " % si.thumbNailUrl)
+            thumbF = Function(GetShowThumb, showInfo=si, secondaryThumb=secondaryThumbUrl)
             showsList.append(Function(DirectoryItem(key=GetShowContents,title=showName, summary=si.info,
-                thumb=Function(GetShowThumb, showInfo=si)), showInfo = si))
+                thumb=thumbF), showInfo = si))
             #Log("DONE")
         else:
-            showsList.append(Function(DirectoryItem(key=GetShowContents,title=showName, thumb=Function(GetShowThumb,
-                showInfo=None)), showInfo = None, showUrl = showUrl, showName = showName))
+            thumbF = Function(GetShowThumb, showInfo=None, secondaryThumb=secondaryThumbUrl)
+            showsList.append(Function(DirectoryItem(key=GetShowContents,title=showName, thumb=thumbF),
+                showInfo = None, showUrl = showUrl, showName = showName))
 
     return showsList     
 
@@ -157,24 +162,38 @@ def GetShowInfo(showUrl):
     if(len(showName) > 0):
         Data.SaveObject(showName, si) 
 
-def GetShowThumb(showInfo = None):
-    if(showInfo == None):
-        return Redirect(R(THUMB))
+def GetShowThumb(showInfo = None, secondaryThumb = None):
+    Log("GetShowThumb")
+    if(showInfo != None):
+        Log("GetShowThumb: %s" % showInfo.name)
+        try:
+            if(Data.Exists(showInfo.thumbFileName)):
+                Log("Found image: %s" % showInfo.thumbFileName)
+                image = Data.LoadObject(showInfo.thumbFileName)
+                imageObj = DataObject(image, "image/jpeg")
+                return imageObj
+        except:
+            Log("Could not get image for %s (imageName:%s)" % (showInfo.name, showInfo.thumbFileName))
+            pass
 
-    try:
-        if(Data.Exists(showInfo.thumbFileName)):
-            Log("Found image: %s" % showInfo.thumbFileName)
-            image = Data.LoadObject(showInfo.thumbFileName)
-            return DataObject(image, "image/jpeg")
-    except:
-        Log("Could not get image for %s (imageName:%s)" % (showInfo.name, showInfo.thumbFileName))
-        pass
+        try:
+            Log("Trying to get standard thumb from website")
+            image = HTTP.Request(showInfo.thumbNailUrl, cacheTime=CACHE_TIME_SHORT).content
+            imageObj = DataObject(image, "image/jpeg")
+            return imageObj
+        except: 
+            pass
 
-    try:
-        image = HTTP.Request(showInfo.thumbNailUrl, cacheTime=CACHE_TIME_SHORT).content
-        return DataObject(image, "image/jpeg")
-    except: 
-        pass
+    if(secondaryThumb != None):
+        Log("Got a secondary thumb")
+        try:
+            image = HTTP.Request(secondaryThumb, cacheTime=CACHE_TIME_SHORT).content
+            imageObj = DataObject(image, "image/jpeg")
+            return imageObj
+        except:
+            Log("Failed to retreive secondary thumb")
+            pass
 
+    Log("No thumb could be loaded, using default")
     return Redirect(R(THUMB))
 
