@@ -21,7 +21,7 @@ def Start():
     cerealizer.register(EpisodeInfo)
     cerealizer.register(CategoryInfo)
 
-    #Thread.Create(ReindexShows)
+    Thread.Create(ReindexShows)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods
