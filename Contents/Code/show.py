@@ -92,7 +92,7 @@ def GetShowContents(sender, showInfo, showUrl = None, showName = None):
     else:
         Log("GetShowContents(no showInfo):")
 
-    list = MediaContainer(title1=showName)
+    list = MediaContainer(title1=sender.title1, title2=showName)
     list.Extend(GetShowCategories(showUrl))
     list.Extend(GetShowEpisodes(showUrl))
 
