@@ -20,6 +20,7 @@ URL_CAT_MOVIE_DRAMA = "http://svtplay.se/c/96257/film_och_drama"
 URL_CAT_CULTURE = "http://svtplay.se/c/96256/kultur_och_noje"
 URL_CAT_FACT = "http://svtplay.se/c/96254/samhalle_och_fakta"
 URL_CAT_NEWS = "http://svtplay.se/c/96255/nyheter"
+URL_CAT_SPORT = "http://svtplay.se/c/96253/sport"
 
 #Texts
 TEXT_LIVE_SHOWS = u'Livesändningar'
@@ -35,6 +36,7 @@ TEXT_CAT_MOVIE_DRAMA = u'Film & Drama'
 TEXT_CAT_CULTURE = u'Kultur & Nöje'
 TEXT_CAT_FACT = u'Samhälle & Fakta'
 TEXT_CAT_NEWS = u'Nyheter'
+TEXT_CAT_SPORT = u'Sport'
 
 TEXT_LIVE = u'LIVE: '
 

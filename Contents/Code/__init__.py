@@ -51,6 +51,10 @@ def GetCategories(sender):
     catMenu.Append(Function(DirectoryItem(key=GetCategoryNewsShows, title=TEXT_CAT_NEWS,
         thumb=R("category_nyheter.png")),
         catUrl=URL_CAT_NEWS, catName=TEXT_CAT_NEWS))
+    catMenu.Append(Function(DirectoryItem(key=GetCategoryNewsShows, title=TEXT_CAT_SPORT,
+        thumb=R("category_sport.png")),
+        catUrl=URL_CAT_SPORT, catName=TEXT_CAT_SPORT))
+
 
 
 
