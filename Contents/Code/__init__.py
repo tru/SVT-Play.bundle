@@ -32,7 +32,8 @@ def MainMenu():
     menu.Append(Function(DirectoryItem(GetRecommendedShows, title=TEXT_RECOMMENDED_SHOWS,
         thumb=R('main_rekommenderat.png'))))
     menu.Append(Function(DirectoryItem(GetLatestClips, title=TEXT_LATEST_CLIPS, thumb=R('main_senaste_klipp.png'))))
-    menu.Append(Function(DirectoryItem(GetLatestClips, title=TEXT_LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
+    menu.Append(Function(DirectoryItem(GetLatestShows, title=TEXT_LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
+    menu.Append(Function(DirectoryItem(GetMostViewed, title=TEXT_MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
     menu.Append(Function(DirectoryItem(GetCategories, title=TEXT_CATEGORIES, thumb=R('main_kategori.png'))))
     #menu.Append(Function(DirectoryItem(ListLiveMenu2, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
@@ -58,6 +59,20 @@ def GetCategories(sender):
 
     return catMenu
 
+def GetMostViewed(sender):
+    Log("GetMostViewed")
+    showsList = MediaContainer(title1 = sender.title1, title2 = TEXT_MOST_VIEWED)
+    pages = GetPaginatePages(url=URL_MOST_VIEWED, divId='pb', maxPaginateDepth = 5)
+    linksList = []
+    for page in pages:
+        pageElement = HTML.ElementFromURL(page)
+        links = pageElement.xpath("//div[@id='pb']//div[@class='content']//a")
+        linksList = linksList + links
+
+    showsList.Extend(CreateShowList(linksList, True))
+ 
+    return showsList
+
 def GetLatestShows(sender):
     Log("GetLatestShows")
     showsList = MediaContainer(title1 = sender.title1, title2 = TEXT_LATEST_SHOWS)
@@ -65,10 +80,10 @@ def GetLatestShows(sender):
     linksList = []
     for page in pages:
         pageElement = HTML.ElementFromURL(page)
-        links = pageElement.xpath("//div[@id='pb']//div[@class='content']//a/@href")
-        linksList.append(links) 
+        links = pageElement.xpath("//div[@id='pb']//div[@class='content']//a")
+        linksList = linksList + links
 
-    showsList.Extend(CreateShowList(linksList))
+    showsList.Extend(CreateShowList(linksList, True))
     return showsList
    
 def GetLatestClips(sender):
