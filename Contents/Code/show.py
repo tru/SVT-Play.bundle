@@ -68,8 +68,15 @@ def GetCategoryShows(sender, catUrl, catName):
     catShows.Extend(CreateShowList(programLinks, True))
     return catShows 
 
+def GetCategoryNewsShows(sender, catUrl, catName):
+    Log("GetCategoryNewsShows")
+    catShows = MediaContainer(title1=sender.title2, title2 = catName)
+    pageElement = HTML.ElementFromURL(catUrl)
+    links = pageElement.xpath("//div[@id='sb' or @id='se']//div[@class='content']//a")
+    catShows.Extend(CreateShowList(links, True))
+    return catShows
 
-
+#This function wants a <a>..</a> tag
 def CreateShowList(programLinks, isRecommendedShows = False):
     showsList = []
     for programLink in programLinks:

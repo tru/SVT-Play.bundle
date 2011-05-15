@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*
+# This class is for subcategories on pages like Bolibompa
+# Do not confuse with the main categories accessible from the root page.
 
 from common import *
 
