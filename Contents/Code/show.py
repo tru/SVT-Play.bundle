@@ -57,7 +57,7 @@ def GetRecommendedShows(sender):
 
 def GetCategoryShows(sender, catUrl, catName):
     Log("GetCategoryShows %s" % catUrl)
-    catShows = MediaContainer(title1 = sender.title1, title2=catName)
+    catShows = MediaContainer(title1 = sender.title2, title2=catName)
     pages = GetPaginatePages(catUrl, 'pb')
     programLinks = []
     for page in pages:

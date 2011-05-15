@@ -43,6 +43,13 @@ def GetCategories(sender):
     catMenu = MediaContainer(title1 = sender.title1, title2=TEXT_CATEGORIES)
     catMenu.Append(Function(DirectoryItem(key=GetCategoryShows, title=TEXT_CAT_CHILD, thumb=R("category_barn.png")),
         catUrl=URL_CAT_CHILD, catName=TEXT_CAT_CHILD))
+    catMenu.Append(Function(DirectoryItem(key=GetCategoryShows, title=TEXT_CAT_MOVIE_DRAMA, thumb=R("category_film_och_drama.png")),
+        catUrl=URL_CAT_MOVIE_DRAMA, catName=TEXT_CAT_MOVIE_DRAMA))
+    catMenu.Append(Function(DirectoryItem(key=GetCategoryShows, title=TEXT_CAT_FACT,
+        thumb=R("category_samhalle_och_fakta.png")),
+        catUrl=URL_CAT_FACT, catName=TEXT_CAT_FACT))
+
+
 
     return catMenu
    

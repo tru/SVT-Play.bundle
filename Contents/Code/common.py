@@ -16,6 +16,9 @@ URL_RECOMMENDED_SHOWS = "http://svtplay.se/?cb,a1364145,1,f,-1/pb,a1364142,1,f,"
 URL_LATEST_CLIPS = "http://svtplay.se/?cb,a1364145,1,f,/pb,a1364142,1,f,-1"
 URL_CATEGORIES = "http://svtplay.se/kategorier"
 URL_CAT_CHILD = "http://svtplay.se/c/96251/barn"
+URL_CAT_MOVIE_DRAMA = "http://svtplay.se/c/96257/film_och_drama"
+URL_CAT_CULTURE = "http://svtplay.se/c/96256/kultur_och_noje"
+URL_CAT_FACT = "http://svtplay.se/c/96254/samhalle_och_fakta"
 
 #Texts
 TEXT_LIVE_SHOWS = u'Livesändningar'
@@ -27,6 +30,9 @@ TEXT_RECOMMENDED_SHOWS = u'Rekommenderat'
 TEXT_LATEST_CLIPS = u'Senaste klipp'
 TEXT_CATEGORIES = u'Kategorier'
 TEXT_CAT_CHILD = u'Barn'
+TEXT_CAT_MOVIE_DRAMA = u'Film & Drama'
+TEXT_CAT_CULTURE = u'Kultur & Nöje'
+TEXT_CAT_FACT = u'Samhälle & Fakta'
 
 TEXT_LIVE = u'LIVE: '
 
