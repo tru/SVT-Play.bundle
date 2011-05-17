@@ -45,7 +45,7 @@ TEXT_CAT_SPORT = u'Sport'
 TEXT_LIVE = u'LIVE: '
 
 #The page step function will only step this many pages deep. Can be changed / function call.
-MAX_PAGINATE_PAGES = 50
+MAX_PAGINATE_PAGES = 5
 
 ART = "art-default.jpg"
 THUMB = 'icon-default.png'

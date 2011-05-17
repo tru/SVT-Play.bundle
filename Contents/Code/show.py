@@ -16,7 +16,7 @@ class ShowInfo:
 
 def ReindexShows():
     Log("Reindex shows")
-    pages = GetPaginatePages(URL_INDEX, "am", URL_INDEX_THUMB_PAGINATE)
+    pages = GetPaginatePages(url=URL_INDEX, divId="am", paginateUrl=URL_INDEX_THUMB_PAGINATE, maxPaginateDepth=500)
     for page in pages:
         pageElement = HTML.ElementFromURL(page)
         FindAllShows(pageElement)

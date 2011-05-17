@@ -62,7 +62,7 @@ def GetCategories(sender):
 def GetMostViewed(sender):
     Log("GetMostViewed")
     showsList = MediaContainer(title1 = sender.title1, title2 = TEXT_MOST_VIEWED)
-    pages = GetPaginatePages(url=URL_MOST_VIEWED, divId='pb', maxPaginateDepth = 5)
+    pages = GetPaginatePages(url=URL_MOST_VIEWED, divId='pb', maxPaginateDepth = MAX_PAGINATE_PAGES)
     linksList = []
     for page in pages:
         pageElement = HTML.ElementFromURL(page)
@@ -76,7 +76,7 @@ def GetMostViewed(sender):
 def GetLatestShows(sender):
     Log("GetLatestShows")
     showsList = MediaContainer(title1 = sender.title1, title2 = TEXT_LATEST_SHOWS)
-    pages = GetPaginatePages(url=URL_LATEST_SHOWS, divId='pb', maxPaginateDepth = 5)
+    pages = GetPaginatePages(url=URL_LATEST_SHOWS, divId='pb', maxPaginateDepth = MAX_PAGINATE_PAGES)
     linksList = []
     for page in pages:
         pageElement = HTML.ElementFromURL(page)
@@ -89,7 +89,7 @@ def GetLatestShows(sender):
 def GetLatestClips(sender):
     Log("GetLatestClips")
     clipsList = MediaContainer(title1 = sender.title1, title2 = TEXT_LATEST_CLIPS)
-    clipsPages = GetPaginatePages(url=URL_LATEST_CLIPS, divId='cb', maxPaginateDepth = 5)
+    clipsPages = GetPaginatePages(url=URL_LATEST_CLIPS, divId='cb', maxPaginateDepth = MAX_PAGINATE_PAGES)
     clipLinks = []
     for page in clipsPages:
         pageElement = HTML.ElementFromURL(page)

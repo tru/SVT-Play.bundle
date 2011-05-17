@@ -11,7 +11,7 @@
         "id":"paginate_depth",
         "type":"text",
         "label":"Max sökdjup",
-        "default":"50"
+        "default":"5"
     }
 
 ]
