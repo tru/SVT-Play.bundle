@@ -62,11 +62,16 @@ def GetEpisodeUrlsFromPage(url):
 
     return epUrls
 
-def GetEpisodeInfo(episodeUrl):
+def GetEpisodeInfo(episodeUrl, forceRefetch = False):
     Log(episodeUrl)
     epInfo = EpisodeInfo()
 
-    pageElement = HTML.ElementFromURL(episodeUrl, cacheTime = CACHE_TIME_EPISODE)
+    if(forceRefetch == True):
+        pageElement = HTML.ElementFromURL(episodeUrl, cacheTime = 0)
+    else:
+        pageElement = HTML.ElementFromURL(episodeUrl, cacheTime = CACHE_TIME_EPISODE)
+    
+
     (contentUrls, flashArgs) = GetContentUrls(pageElement)
 
     episodeTitle = pageElement.xpath("//meta[@property='og:title']/@content")[0]
@@ -102,7 +107,13 @@ def GetEpisodeInfo(episodeUrl):
     try:
         if(len(flashArgs['liveStart']) > 0):
             epInfo.isLive = True
-            episodeTitle = TEXT_LIVE + episodeTitle
+            try:
+                if(int(flashArgs['liveStart']) <= 0):
+                    episodeTitle = TEXT_LIVE_CURRENT + episodeTitle
+                else:
+                    episodeTitle = TEXT_LIVE + episodeTitle
+            except:
+                    episodeTitle = TEXT_LIVE + episodeTitle
             Log("IS LIVE")
     except KeyError:
         Log('liveStart not found')
