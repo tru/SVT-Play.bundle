@@ -17,7 +17,10 @@ class EpisodeInfo:
 
     def GetMediaItem(self):
         contentUrl = self.GetContentUrl()
-        if(contentUrl.endswith('.flv')):
+        if(self.isLive):
+            item = WebVideoItem(url=contentUrl, title=self.title, summary=self.info, duration=self.length,
+                    thumb=self.thumbNailUrl, art=self.thumbNailUrl)
+        elif(contentUrl.endswith('.flv')):
             item = VideoItem(key=contentUrl, title=self.title, summary=self.info, duration=self.length,
                 thumb=self.thumbNailUrl, art=self.thumbNailUrl)
         else:
@@ -43,8 +46,7 @@ def GetContentUrlFromUserQualSettings(epInfo):
             url = URL_PLEX_PLAYER + url.replace("_definst_/","_definst_&clip=")
 
     if(epInfo.isLive):
-        url = re.sub(r'^(.*)/(.*)$','\\1&clip=\\2', url)
-        url = url +"&live=true&width=640&height=360"
+        return epInfo.episodeUrl
 
     return url
 
@@ -101,7 +103,7 @@ def GetEpisodeInfo(episodeUrl):
         if(len(flashArgs['liveStart']) > 0):
             epInfo.isLive = True
             episodeTitle = TEXT_LIVE + episodeTitle
-            #Log("IS LIVE")
+            Log("IS LIVE")
     except KeyError:
         Log('liveStart not found')
 
