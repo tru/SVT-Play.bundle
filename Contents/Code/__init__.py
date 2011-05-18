@@ -15,13 +15,17 @@ def Start():
     Plugin.AddViewGroup(name="List")
     HTTP.CacheTime = CACHE_TIME_SHORT
     HTTP.PreCache(URL_INDEX)
+
     MediaContainer.art = R(ART)
+    DirectoryItem.thumb = R(THUMB)
+    VideoItem.thumb = R(THUMB)
+    WebVideoItem.thumb = R(THUMB)
 
     cerealizer.register(ShowInfo)
     cerealizer.register(EpisodeInfo)
     cerealizer.register(CategoryInfo)
 
-    #Thread.Create(ReindexShows)
+    Thread.Create(ReindexShows)
     Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
 
 # Menu builder methods
@@ -31,11 +35,12 @@ def MainMenu():
     menu.Append(Function(DirectoryItem(GetIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
     menu.Append(Function(DirectoryItem(GetRecommendedShows, title=TEXT_RECOMMENDED_SHOWS,
         thumb=R('main_rekommenderat.png'))))
+    #menu.Append(Function(DirectoryItem(GetLatestNews, title=TEXT_LATEST_NEWS)))
     menu.Append(Function(DirectoryItem(GetLatestClips, title=TEXT_LATEST_CLIPS, thumb=R('main_senaste_klipp.png'))))
     menu.Append(Function(DirectoryItem(GetLatestShows, title=TEXT_LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
     menu.Append(Function(DirectoryItem(GetMostViewed, title=TEXT_MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
     menu.Append(Function(DirectoryItem(GetCategories, title=TEXT_CATEGORIES, thumb=R('main_kategori.png'))))
-    menu.Append(Function(DirectoryItem(ListLiveMenu2, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
+    menu.Append(Function(DirectoryItem(ListLiveMenu, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
     menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
     return menu
 
@@ -58,6 +63,24 @@ def GetCategories(sender):
         catUrl=URL_CAT_SPORT, catName=TEXT_CAT_SPORT))
 
     return catMenu
+
+def GetLatestNews(sender):
+    Log("GetLatestNews")
+    newsList = MediaContainer(title1=sender.title1, title2 = TEXT_LATEST_NEWS)
+    pages = GetPaginatePages(url=URL_LATEST_NEWS, divId='pb')
+    linksList = []
+    for page in pages:
+        pageElement = HTML.ElementFromURL(page)
+        links = pageElement.xpath("//div[@id='pb']//div[@class='content']//a/@href")
+        for link in links:
+            newsLink = URL_SITE + link
+            linksList.append(newsLink)
+
+    for link in linksList:
+        epInfo = GetEpisodeInfo(link)        
+        newsList.Append(epInfo.GetMediaItem())
+
+    return newsList
 
 def GetMostViewed(sender):
     Log("GetMostViewed")
@@ -116,38 +139,15 @@ def ValidatePrefs():
 
     Log("max paginate %d" % MAX_PAGINATE_PAGES)
 
-def ListLiveMenu2(sender):
+def ListLiveMenu(sender):
     liveList = MediaContainer()
-    pageElement = HTML.ElementFromURL(URL_LIVE)
+    pageElement = HTML.ElementFromURL(URL_LIVE, cacheTime = 0)
     activeLinks = pageElement.xpath("//span[@class='description']/a/@href")
     for link in activeLinks:
         newLink = URL_SITE + link
         Log("Link: %s " % newLink)
-        epInfo = GetEpisodeInfo(newLink)
+        epInfo = GetEpisodeInfo(newLink, True)
         liveList.Append(epInfo.GetMediaItem())
 
     return liveList
-
-def ListLiveMenu(sender):
-    showsList = MediaContainer()
-    liveElements = HTML.ElementFromURL(URL_LIVE)
-    for element in liveElements.xpath("//span[@class='thumbnail']//a[@class='tableau']"):
-        liveName = strip_all(unicode(element.xpath("../../../../h3/text()")[0]))        
-        Log("LiveName: %s" % liveName)
-        liveUrl = URL_SITE +  element.get("href")
-       
-        # Get the actual stream url from subpage and do some munging for the plex player to get it
-        epInfo = GetEpisodeInfo(liveUrl)
-        liveContentUrl = GetContentUrlFromUserQualSettings(epInfo)
-        liveContentUrl = re.sub(r'^(.*)/(.*)$','\\1&clip=\\2', liveContentUrl)
-        liveContentUrl = URL_PLEX_PLAYER + liveContentUrl +"&live=true&width=640&height=360"
-       
-        Log("Live content url: " + liveContentUrl)
-        liveIcon= element.xpath("descendant::img[starts-with(@class, 'thumbnail')]")[0].get("src")
-        liveDesc = strip_all(unicode(element.xpath("../../span[@class='description']/text()")[0]))
-        Log("Live icon % s" % liveIcon)
-        Log("LiveDesc: %s" % liveDesc)
-        showsList.Append(WebVideoItem(url=liveContentUrl, title=liveName, summary=liveDesc, duration="0", thumb=liveIcon))
-        
-    return showsList 
 
