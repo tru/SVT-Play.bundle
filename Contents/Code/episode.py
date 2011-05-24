@@ -62,7 +62,7 @@ def GetEpisodeUrlsFromPage(url):
 
     return epUrls
 
-def GetEpisodeInfo(episodeUrl, forceRefetch = False):
+def GetEpisodeInfo(episodeUrl, forceRefetch = False, isRecursed = False):
     Log(episodeUrl)
     epInfo = EpisodeInfo()
 
@@ -71,8 +71,13 @@ def GetEpisodeInfo(episodeUrl, forceRefetch = False):
     else:
         pageElement = HTML.ElementFromURL(episodeUrl, cacheTime = CACHE_TIME_EPISODE)
     
-
-    (contentUrls, flashArgs) = GetContentUrls(pageElement)
+    try:
+        (contentUrls, flashArgs) = GetContentUrls(pageElement)
+    except:
+        if(isRecursed == False):
+            return GetEpisodeInfo(episodeUrl, True, True)
+        else:
+            return None
 
     episodeTitle = pageElement.xpath("//meta[@property='og:title']/@content")[0]
     episodeTitle = string.split(episodeTitle, "|")[0]
