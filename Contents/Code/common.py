@@ -79,10 +79,16 @@ PREF_PAGINATE_DEPTH = 'paginate_depth'
 #random stuff
 TAG_DIV_ID = "//div[@id='%s']" 
 
-def PlayVideo(sender, url):
+def PlayVideo(url):
     Log("Request to play video: %s" % url)
     return Redirect(WebVideoItem(url))
     
+def GetThumb(url):
+    try:
+        data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
+        return DataObject(data, 'image/jpeg')
+    except:
+        return Redirect(R(THUMB))
 
 def FindPaginateUrl(url, divId):
     pageElement = HTML.ElementFromURL(url)

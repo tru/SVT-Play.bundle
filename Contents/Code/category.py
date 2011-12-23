@@ -23,9 +23,9 @@ class CategoryInfo:
         return epList
 
        
-def GetCategoryContents(sender, ci):
-    list = MediaContainer(title1=sender.title2, title2=ci.name)
-    list.Extend(ci.GetMediaItems())
+def GetCategoryContents(ci):
+    list = ObjectContainer(title2=ci.name)
+    list += ci.GetMediaItems()
     return list
 
 def GetCategoryInfosFromPage(url):

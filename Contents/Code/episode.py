@@ -17,15 +17,12 @@ class EpisodeInfo:
 
     def GetMediaItem(self):
         contentUrl = self.GetContentUrl()
-        if(self.isLive):
-            item = WebVideoItem(url=contentUrl, title=self.title, summary=self.info, duration=self.length,
-                    thumb=self.thumbNailUrl, art=self.thumbNailUrl)
-        elif(contentUrl.endswith('.flv')):
-            item = VideoItem(key=contentUrl, title=self.title, summary=self.info, duration=self.length,
-                thumb=self.thumbNailUrl, art=self.thumbNailUrl)
-        else:
-            item = Function(VideoItem(key=PlayVideo, title=self.title, summary=self.info,
-                duration=self.length, thumb=self.thumbNailUrl, art=self.thumbNailUrl), url=contentUrl)
+        item = VideoClipObject(url=self.episodeUrl,
+                               title=self.title,
+                               duration=self.length,
+                               summary=self.info,
+                               thumb=Callback(GetThumb, url=self.thumbNailUrl)
+                               )
         return item
 
 

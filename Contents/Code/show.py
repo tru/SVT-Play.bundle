@@ -31,20 +31,20 @@ def FindAllShows(pageElement):
         Log("info: %s " % show)
         GetShowInfo(URL_SITE + show)
 
-def GetIndexShows(sender):
+def GetIndexShows():
     Log("GetIndexShows")
-    showsList = MediaContainer(title1 = sender.title1, title2=TEXT_INDEX_SHOWS)
+    showsList = ObjectContainer(title2=TEXT_INDEX_SHOWS)
     xpathBase = "//div[@class='tab active']"
     pageElement = HTML.ElementFromURL(URL_INDEX)
     programLinks = pageElement.xpath(xpathBase + "//a[starts-with(@href,'/t/')]")
     
-    showsList.Extend(CreateShowList(programLinks))
+    CreateShowList(showsList, programLinks)
 
     return showsList
 
-def GetRecommendedShows(sender):
+def GetRecommendedShows():
     Log("GetRecommendedShows")
-    showsList = MediaContainer(title1 = sender.title1, title2=TEXT_RECOMMENDED_SHOWS)
+    showsList = ObjectContainer(title2=TEXT_RECOMMENDED_SHOWS)
     pages = GetPaginatePages(URL_RECOMMENDED_SHOWS, "pb")
     programLinks = []
     for page in pages:
@@ -52,12 +52,12 @@ def GetRecommendedShows(sender):
         pLinks = pageElement.xpath("//div[@id='pb']//div[@class='content']//li/a[starts-with(@href, '/t/')]")
         programLinks = programLinks + pLinks
 
-    showsList.Extend(CreateShowList(programLinks, True))
+    CreateShowList(showsList, programLinks, True)
     return showsList
 
-def GetCategoryShows(sender, catUrl, catName):
+def GetCategoryShows(catUrl, catName):
     Log("GetCategoryShows %s" % catUrl)
-    catShows = MediaContainer(title1 = sender.title2, title2=catName)
+    catShows = ObjectContainer(title2=catName)
     pages = GetPaginatePages(catUrl, 'pb')
     programLinks = []
     for page in pages:
@@ -65,20 +65,19 @@ def GetCategoryShows(sender, catUrl, catName):
         pLinks = pageElement.xpath("//div[@id='pb']//div[@class='content']//li/a[starts-with(@href, '/t/')]")
         programLinks = programLinks + pLinks
 
-    catShows.Extend(CreateShowList(programLinks, True))
+    CreateShowList(catShows, programLinks, True)
     return catShows 
 
-def GetCategoryNewsShows(sender, catUrl, catName):
+def GetCategoryNewsShows(catUrl, catName):
     Log("GetCategoryNewsShows")
-    catShows = MediaContainer(title1=sender.title2, title2 = catName)
+    catShows = ObjectContainer(title2 = catName)
     pageElement = HTML.ElementFromURL(catUrl)
     links = pageElement.xpath("//div[@id='sb' or @id='se']//div[@class='content']//a")
-    catShows.Extend(CreateShowList(links, True))
+    CreateShowList(catShows, links, True)
     return catShows
 
 #This function wants a <a>..</a> tag
-def CreateShowList(programLinks, isRecommendedShows = False):
-    showsList = []
+def CreateShowList(container, programLinks, isRecommendedShows = False):
     for programLink in programLinks:
         showUrl = URL_SITE + programLink.get("href")
         showName = string.strip(programLink.xpath("text()")[0])
@@ -94,19 +93,19 @@ def CreateShowList(programLinks, isRecommendedShows = False):
             Log("Using stored data for: %s " % si.name)
             #Log("subtitle: %s" % si.info)
             #Log("thumbnail: %s " % si.thumbNailUrl)
-            thumbF = Function(GetShowThumb, showInfo=si, secondaryThumb=secondaryThumbUrl)
-            showsList.append(Function(DirectoryItem(key=GetShowContents,title=showName, summary=si.info,
-                thumb=thumbF), showInfo = si))
+            thumbF = Callback(GetShowThumb, showInfo=si, secondaryThumb=secondaryThumbUrl)
+            container.add(DirectoryObject(key=Callback(GetShowContents, showInfo=si),
+                                             title=showName, summary=si.info, thumb=thumbF))
             #Log("DONE")
         else:
-            thumbF = Function(GetShowThumb, showInfo=None, secondaryThumb=secondaryThumbUrl)
-            showsList.append(Function(DirectoryItem(key=GetShowContents,title=showName, thumb=thumbF),
-                showInfo = None, showUrl = showUrl, showName = showName))
+            thumbF = Callback(GetShowThumb, showInfo=None, secondaryThumb=secondaryThumbUrl)
+            container.add(DirectoryObject(key=Callback(GetShowContents, showInfo=None, showUrl=showUrl, showName=showName),
+                                             title=showName, thumb=thumbF))
 
-    return showsList     
+    return container
 
 
-def GetShowContents(sender, showInfo, showUrl = None, showName = None):
+def GetShowContents(showInfo, showUrl = None, showName = None):
     if(showUrl == None):
         Log("GetShowContents: %s, %s" %  (showInfo.name, showInfo.url))
         showUrl = showInfo.url
@@ -114,46 +113,43 @@ def GetShowContents(sender, showInfo, showUrl = None, showName = None):
     else:
         Log("GetShowContents(no showInfo):")
 
-    list = MediaContainer(title1=sender.title2, title2=showName)
-    list.Extend(GetShowCategories(showUrl))
-    list.Extend(GetShowEpisodes(showUrl))
+    list = ObjectContainer(title2=showName)
+    GetShowCategories(list, showUrl)
+    GetShowEpisodes(list, showUrl)
 
     return list
 
-def GetShowCategories(showUrl=None):
+def GetShowCategories(container, showUrl=None):
     pages = GetPaginatePages(showUrl, "sb")
     catInfos = []
     for page in pages:
         catInfos = catInfos + GetCategoryInfosFromPage(page)
 
-    catItems = []
-
     for catInfo in catInfos:
-        f = Function(DirectoryItem(key=GetCategoryContents, title=catInfo.name, thumb=catInfo.thumbUrl), ci=catInfo)
-        catItems.append(f)
+        f = DirectoryObject(key=Callback(GetCategoryContents, ci=catInfo), title=catInfo.name, thumb=catInfo.thumbUrl)
+        container.add(f)
+        
+    return container
 
-    return catItems
-
-def GetShowEpisodes(showUrl = None):
+def GetShowEpisodes(container, showUrl = None):
     pages = GetPaginatePages(showUrl, "sb")
     epUrls = []
     for page in pages:
         epUrls = epUrls + GetEpisodeUrlsFromPage(page)
 
-    epList = []
     for epUrl in epUrls:
         #Log("EPURL: %s" % epUrl)
         epInfo = GetEpisodeInfo(epUrl)
-        epList.append(epInfo.GetMediaItem())
-    return epList
+        container.add(epInfo.GetMediaItem())
+    return container
 
 
 def GetShowInfo(showUrl):
     Log("Getting showinfo from: %s " % showUrl)
     pageElement = HTML.ElementFromURL(showUrl, cacheTime = CACHE_TIME_1DAY)
-    showImageUrl = str(pageElement.xpath("//meta[@property='og:image']/@content")[0])
-    showInfo = str(pageElement.xpath("//meta[@property='og:description']/@content")[0])
-    title = str(pageElement.xpath("//meta[@property='og:title']/@content")[0])
+    showImageUrl = pageElement.xpath("//meta[@property='og:image']/@content")[0].text
+    showInfo = pageElement.xpath("//meta[@property='og:description']/@content")[0].text
+    title = pageElement.xpath("//meta[@property='og:title']/@content")[0].text
     showName = string.strip(string.split(title, '|')[0])
 
     moreInfoUrl = pageElement.xpath("//div[@class='info']//li[@class='title']/a/@href")

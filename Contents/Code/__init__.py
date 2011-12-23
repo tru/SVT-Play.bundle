@@ -16,58 +16,52 @@ def Start():
     HTTP.CacheTime = CACHE_TIME_SHORT
     HTTP.PreCache(URL_INDEX)
 
-    MediaContainer.art = R(ART)
-    DirectoryItem.thumb = R(THUMB)
-    VideoItem.thumb = R(THUMB)
-    WebVideoItem.thumb = R(THUMB)
+    ObjectContainer.art = R(ART)
+    DirectoryObject.thumb = R(THUMB)
 
     cerealizer.register(ShowInfo)
     cerealizer.register(EpisodeInfo)
     cerealizer.register(CategoryInfo)
 
-    Thread.Create(ReindexShows)
-    Log("Quality Setting: %s" % Prefs[PREF_QUALITY])
+#    Thread.Create(ReindexShows)
 
 # Menu builder methods
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def MainMenu():
-    menu = MediaContainer(viewGroup="List", title1= TEXT_TITLE + " " + VERSION)
-    menu.Append(Function(DirectoryItem(GetIndexShows, title=TEXT_INDEX_SHOWS, thumb=R('main_index.png'))))
-    menu.Append(Function(DirectoryItem(GetRecommendedShows, title=TEXT_RECOMMENDED_SHOWS,
-        thumb=R('main_rekommenderat.png'))))
-    #menu.Append(WebVideoItem(url="http://svtplay.se/t/102782/mitt_i_naturen", title="PauseTest"))
-    menu.Append(Function(DirectoryItem(GetLatestNews, title=TEXT_LATEST_NEWS, thumb=R('main_senaste_nyhetsprogram.png'))))
-    menu.Append(Function(DirectoryItem(GetLatestClips, title=TEXT_LATEST_CLIPS, thumb=R('main_senaste_klipp.png'))))
-    menu.Append(Function(DirectoryItem(GetLatestShows, title=TEXT_LATEST_SHOWS, thumb=R('main_senaste_program.png'))))
-    menu.Append(Function(DirectoryItem(GetMostViewed, title=TEXT_MOST_VIEWED, thumb=R('main_mest_sedda.png'))))
-    menu.Append(Function(DirectoryItem(GetCategories, title=TEXT_CATEGORIES, thumb=R('main_kategori.png'))))
-    menu.Append(Function(DirectoryItem(ListLiveMenu, title=TEXT_LIVE_SHOWS, thumb=R('main_live.png'))))
-    menu.Append(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
+    menu = ObjectContainer(view_group="List", title1= TEXT_TITLE + " " + VERSION)
+    menu.add(DirectoryObject(key=Callback(GetIndexShows), title=TEXT_INDEX_SHOWS, thumb=R('main_index.png')))
+    menu.add(DirectoryObject(key=Callback(GetRecommendedShows), title=TEXT_RECOMMENDED_SHOWS,
+        thumb=R('main_rekommenderat.png')))
+    #menu.add(WebVideoItem(url="http://svtplay.se/t/102782/mitt_i_naturen", title="PauseTest"))
+    menu.add(DirectoryObject(key=Callback(GetLatestNews), title=TEXT_LATEST_NEWS, thumb=R('main_senaste_nyhetsprogram.png')))
+    menu.add(DirectoryObject(key=Callback(GetLatestClips), title=TEXT_LATEST_CLIPS, thumb=R('main_senaste_klipp.png')))
+    menu.add(DirectoryObject(key=Callback(GetLatestShows), title=TEXT_LATEST_SHOWS, thumb=R('main_senaste_program.png')))
+    menu.add(DirectoryObject(key=Callback(GetMostViewed), title=TEXT_MOST_VIEWED, thumb=R('main_mest_sedda.png')))
+    menu.add(DirectoryObject(key=Callback(GetCategories), title=TEXT_CATEGORIES, thumb=R('main_kategori.png')))
+    menu.add(DirectoryObject(key=Callback(ListLiveMenu), title=TEXT_LIVE_SHOWS, thumb=R('main_live.png')))
+#    menu.add(PrefsItem(title=TEXT_PREFERENCES, thumb=R('icon-prefs.png')))
     return menu
 
 
-def GetCategories(sender):
+def GetCategories():
     Log("GetCategories")
-    catMenu = MediaContainer(viewGroup="List", title1 = sender.title1, title2=TEXT_CATEGORIES)
-    catMenu.Append(Function(DirectoryItem(key=GetCategoryShows, title=TEXT_CAT_CHILD, thumb=R("category_barn.png")),
-        catUrl=URL_CAT_CHILD, catName=TEXT_CAT_CHILD))
-    catMenu.Append(Function(DirectoryItem(key=GetCategoryShows, title=TEXT_CAT_MOVIE_DRAMA, thumb=R("category_film_och_drama.png")),
-        catUrl=URL_CAT_MOVIE_DRAMA, catName=TEXT_CAT_MOVIE_DRAMA))
-    catMenu.Append(Function(DirectoryItem(key=GetCategoryShows, title=TEXT_CAT_FACT,
-        thumb=R("category_samhalle_och_fakta.png")),
-        catUrl=URL_CAT_FACT, catName=TEXT_CAT_FACT))
-    catMenu.Append(Function(DirectoryItem(key=GetCategoryNewsShows, title=TEXT_CAT_NEWS,
-        thumb=R("category_nyheter.png")),
-        catUrl=URL_CAT_NEWS, catName=TEXT_CAT_NEWS))
-    catMenu.Append(Function(DirectoryItem(key=GetCategoryNewsShows, title=TEXT_CAT_SPORT,
-        thumb=R("category_sport.png")),
-        catUrl=URL_CAT_SPORT, catName=TEXT_CAT_SPORT))
+    catMenu = ObjectContainer(view_group="List", title2=TEXT_CATEGORIES)
+    catMenu.add(DirectoryObject(key=Callback(GetCategoryShows, catUrl=URL_CAT_CHILD, catName=TEXT_CAT_CHILD),
+                                   title=TEXT_CAT_CHILD, thumb=R("category_barn.png")))
+    catMenu.add(DirectoryObject(key=Callback(GetCategoryShows,catUrl=URL_CAT_MOVIE_DRAMA, catName=TEXT_CAT_MOVIE_DRAMA),
+                                   title=TEXT_CAT_MOVIE_DRAMA, thumb=R("category_film_och_drama.png")))
+    catMenu.add(DirectoryObject(key=Callback(GetCategoryShows, catUrl=URL_CAT_FACT, catName=TEXT_CAT_FACT),
+                                   title=TEXT_CAT_FACT, thumb=R("category_samhalle_och_fakta.png")))
+    catMenu.add(DirectoryObject(key=Callback(GetCategoryNewsShows, catUrl=URL_CAT_NEWS, catName=TEXT_CAT_NEWS), 
+                                   title=TEXT_CAT_NEWS, thumb=R("category_nyheter.png")))
+    catMenu.add(DirectoryObject(key=Callback(GetCategoryNewsShows, catUrl=URL_CAT_SPORT, catName=TEXT_CAT_SPORT),
+                                   title=TEXT_CAT_SPORT, thumb=R("category_sport.png")))
 
     return catMenu
 
-def GetLatestNews(sender):
+def GetLatestNews():
     Log("GetLatestNews")
-    newsList = MediaContainer(title1=sender.title1, title2 = TEXT_LATEST_NEWS)
+    newsList = ObjectContainer(title2 = TEXT_LATEST_NEWS)
     pages = GetPaginatePages(url=URL_LATEST_NEWS, divId='pb')
     linksList = []
     for page in pages:
@@ -79,13 +73,13 @@ def GetLatestNews(sender):
 
     for link in linksList:
         epInfo = GetEpisodeInfo(link)        
-        newsList.Append(epInfo.GetMediaItem())
+        newsList.add(epInfo.GetMediaItem())
 
     return newsList
 
-def GetMostViewed(sender):
+def GetMostViewed():
     Log("GetMostViewed")
-    showsList = MediaContainer(title1 = sender.title1, title2 = TEXT_MOST_VIEWED)
+    showsList = ObjectContainer(title2 = TEXT_MOST_VIEWED)
     pages = GetPaginatePages(url=URL_MOST_VIEWED, divId='pb', maxPaginateDepth = MAX_PAGINATE_PAGES)
     linksList = []
     for page in pages:
@@ -93,13 +87,13 @@ def GetMostViewed(sender):
         links = pageElement.xpath("//div[@id='pb']//div[@class='content']//a")
         linksList = linksList + links
 
-    showsList.Extend(CreateShowList(linksList, True))
+    showsList += CreateShowList(linksList, True)
  
     return showsList
 
-def GetLatestShows(sender):
+def GetLatestShows():
     Log("GetLatestShows")
-    showsList = MediaContainer(title1 = sender.title1, title2 = TEXT_LATEST_SHOWS)
+    showsList = ObjectContainer(title2 = TEXT_LATEST_SHOWS)
     pages = GetPaginatePages(url=URL_LATEST_SHOWS, divId='pb', maxPaginateDepth = MAX_PAGINATE_PAGES)
     linksList = []
     for page in pages:
@@ -107,12 +101,12 @@ def GetLatestShows(sender):
         links = pageElement.xpath("//div[@id='pb']//div[@class='content']//a")
         linksList = linksList + links
 
-    showsList.Extend(CreateShowList(linksList, True))
+    showsList += CreateShowList(linksList, True)
     return showsList
    
-def GetLatestClips(sender):
+def GetLatestClips():
     Log("GetLatestClips")
-    clipsList = MediaContainer(title1 = sender.title1, title2 = TEXT_LATEST_CLIPS)
+    clipsList = ObjectContainer(title2 = TEXT_LATEST_CLIPS)
     clipsPages = GetPaginatePages(url=URL_LATEST_CLIPS, divId='cb', maxPaginateDepth = MAX_PAGINATE_PAGES)
     clipLinks = []
     for page in clipsPages:
@@ -125,7 +119,7 @@ def GetLatestClips(sender):
 
     for clipLink in clipLinks:
         epInfo = GetEpisodeInfo(clipLink)        
-        clipsList.Append(epInfo.GetMediaItem())
+        clipsList.add(epInfo.GetMediaItem())
 
     return clipsList
 
@@ -140,15 +134,15 @@ def ValidatePrefs():
 
     Log("max paginate %d" % MAX_PAGINATE_PAGES)
 
-def ListLiveMenu(sender):
-    liveList = MediaContainer()
+def ListLiveMenu():
+    liveList = ObjectContainer()
     pageElement = HTML.ElementFromURL(URL_LIVE, cacheTime = 0)
     activeLinks = pageElement.xpath("//span[@class='description']/a/@href")
     for link in activeLinks:
         newLink = URL_SITE + link
         Log("Link: %s " % newLink)
         epInfo = GetEpisodeInfo(newLink, True)
-        liveList.Append(epInfo.GetMediaItem())
+        liveList.add(epInfo.GetMediaItem())
 
     return liveList
 
